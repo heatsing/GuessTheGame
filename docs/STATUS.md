@@ -11,7 +11,10 @@
 | 1 | PM | PRD + game rules + acceptance criteria | done | docs: define product requirements and game rules |
 | 2 | Architect | Static architecture + DECISIONS | done | docs: define static application architecture |
 | 3 | UX Designer | Sitemap + user flows + component states | done | docs: define user experience and interface system |
-| 4 | Engineer | Code implementation | pending | — |
+| 4a | Engineer | Application shell | done | chore: initialize static application shell |
+| 4b | Content Architect | Puzzle content system | in progress | — |
+| 4c | Engine Engineer | Game engine | pending | — |
+| 4d | Engineer | UI implementation | pending | — |
 
 ## Key Decisions Log
 
