@@ -19,6 +19,8 @@
 | 4f | SEO Engineer | Technical SEO & discovery | done | feat: add technical seo and static discovery pages |
 | 4g | Perf & A11y Engineer | Loading & accessibility | done | perf: improve loading and accessibility |
 | 4h | QA Engineer | Gameplay regression coverage | done | test: add comprehensive gameplay regression coverage |
+| 4i | Security Reviewer | Security, privacy & copyright review | done | docs: add security privacy and copyright review |
+| 4j | DevOps Engineer | Release pipeline | done | ci: add validated static deployment pipeline |
 
 ## Key Decisions Log
 
@@ -33,6 +35,8 @@
 - 2026-07-09: Technical SEO (Phase 4f) complete — per-page unique title/description/canonical/OG via Next.js Metadata API, `app/sitemap.ts` + `app/robots.ts`, WebSite/WebApplication/FAQPage JSON-LD (no fake reviews), static H1 + how-to content on every play page, `/categories` discovery page, related-mode internal links, noindex on thin pages (stats, share, archive/[date], 404), canonical domain centralized in `src/lib/site-config.ts` via `NEXT_PUBLIC_SITE_URL`. 144 tests pass, static build verified.
 - 2026-07-09: Performance & accessibility (Phase 4g) complete — `prefers-reduced-motion` honored (animations/smooth-scroll disabled), `touch-action: manipulation` + `-webkit-tap-highlight-color` on interactive elements, `overscroll-behavior: contain` on modals, `scroll-margin-top` on heading anchors, Modal now marks background `inert` + supports `aria-describedby`, new accessible game primitives (`GameImage` fixed-dim + lazy/priority + error fallback, `ResultAnnouncer` aria-live non-color result, `TimelineControls` non-drag keyboard reorder, `LazyPlayMode` code-splitting, `ShareButton` Web Share→clipboard fallback). 203 unit tests + 3 e2e pass.
 - 2026-07-09: QA regression coverage (Phase 4h) complete — pure `src/lib/game/match.ts` (answer normalization / correct guess / duplicate detection / wrong-guess dedup) with 21 tests; component tests for GameImage/ResultAnnouncer/TimelineControls/ShareButton/Modal a11y/not-found; storage edge cases (daily date boundary, missing puzzle reference, empty bank, score floor, refresh recovery, reset); Playwright config + 3 e2e (homepage H1, keyboard nav to play page, 404 quick links). 203 unit + 3 e2e green; content:check + build verified.
+- 2026-07-09: Security/privacy/copyright review (Phase 4i) complete — read-only audit in `docs/SECURITY-REVIEW.md`. 1 High (fabricated image attribution on placeholder screenshots — ss-001/ss-002 claim NASA provenance for generated placeholders), 3 Medium (no Privacy/Contact page; static answer exposure undisclosed; no CSP/security headers), 4 Low. No secrets in repo; no PII in localStorage; no analytics/ads; no fake ratings.
+- 2026-07-09: Release pipeline (Phase 4j) complete — GitHub Actions CI (`ci.yml`: npm ci frozen install, typecheck, lint, test, content:check, build, e2e with caching + artifacts) and deploy (`deploy.yml`: fires only on CI success on main, Vercel prod deploy + 4-step smoke test). `vercel.json` (cache + security headers), `.env.example` template, `docs/deployment.md` (preview/prod deploy, domain switch, cache strategy, rollback, smoke test). Failed builds block deploy; unknown branches never deploy to prod.
 
 ## Deliverables
 

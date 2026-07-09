@@ -1,0 +1,102 @@
+name: Deploy
+
+# Production deployment is triggered ONLY after the CI workflow completes
+# successfully on the main branch. A failing typecheck/lint/test/content/build
+# therefore blocks deployment — there is no path to production that bypasses
+# the gate. Unknown branches are never deployed to production.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Vercel (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only deploy when CI succeeded AND the run was on the main branch.
+    # workflow_run events fire for every CI completion; this guard is the
+    # single enforcer of "main-only production deploys".
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+
+    steps:
+      - name: Checkout (at the commit CI verified)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --no-save vercel@latest
+
+      - name: Pull Vercel project environment
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build (Vercel build step)
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "Production URL: $DEPLOY_URL"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Post-release smoke test — fails the job (and signals a bad release)
+      # if the deployed site does not serve the expected static content.
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.url }}"
+          echo "Smoke testing $URL"
+
+          echo ":: [1/4] Homepage returns 200 and contains an H1"
+          HOME_BODY=$(curl -sS -L -o - -w "\n%{http_code}" "$URL/")
+          HOME_CODE=$(echo "$HOME_BODY" | tail -n1)
+          echo "Homepage HTTP status: $HOME_CODE"
+          test "$HOME_CODE" = "200"
+          echo "$HOME_BODY" | grep -q "<h1" || { echo "Homepage missing H1"; exit 1; }
+
+          echo ":: [2/4] Sitemap is reachable"
+          SITEMAP_CODE=$(curl -sS -L -o /dev/null -w "%{http_code}" "$URL/sitemap.xml")
+          echo "sitemap.xml HTTP status: $SITEMAP_CODE"
+          test "$SITEMAP_CODE" = "200"
+
+          echo ":: [3/4] Robots.txt is reachable"
+          ROBOTS_CODE=$(curl -sS -L -o /dev/null -w "%{http_code}" "$URL/robots.txt")
+          echo "robots.txt HTTP status: $ROBOTS_CODE"
+          test "$ROBOTS_CODE" = "200"
+
+          echo ":: [4/4] A play page returns 200"
+          PLAY_CODE=$(curl -sS -L -o /dev/null -w "%{http_code}" "$URL/play/keywords/")
+          echo "/play/keywords/ HTTP status: $PLAY_CODE"
+          test "$PLAY_CODE" = "200"
+
+          echo "Smoke test passed."
