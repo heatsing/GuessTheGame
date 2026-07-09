@@ -15,6 +15,8 @@
 | 4b | Content Architect | Puzzle content system | done | feat: add validated static puzzle content system |
 | 4c | Engine Engineer | Game engine | removed | reverted — engine deferred |
 | 4d | Engineer | UI implementation | pending | — |
+| 4e | Storage Engineer | Client data persistence | done | feat: add versioned local progress and statistics |
+| 4f | SEO Engineer | Technical SEO & discovery | done | feat: add technical seo and static discovery pages |
 
 ## Key Decisions Log
 
@@ -25,6 +27,8 @@
 - 2026-07-09: UX design complete — 12-page sitemap, full user flows, design tokens, 30+ component inventory, accessibility spec.
 - 2026-07-09: Infrastructure shell complete — Next.js 15.5.20, `output: 'export'` enabled, build wrapper handles Windows Defender phantom-file bug, dark theme via `color-scheme: dark`.
 - 2026-07-09: Game engine (Phase 4c) reverted/removed at owner request. Content system simplified — removed `PuzzleSchema` discriminated union in favor of per-mode `schemaForMode`/`parsePuzzle` dispatch. Engine will be re-introduced when needed for UI implementation.
+- 2026-07-09: Client data persistence (Phase 4e) complete — `src/storage/` module with unified Storage Adapter (localStorage + memory fallback), schema versioning (`CURRENT_SCHEMA_VERSION = 2`), V1→V2 chained migration, JSON corruption recovery (corrupt data parked to `:corrupted` key, never overwritten), SSR-safe reads/writes, capacity pruning (daily 60d / last30 30d / recent 20), idempotent domain actions (`recordModeResult` no-op on duplicates, no score downgrade), export/reset, 84 unit + integration tests.
+- 2026-07-09: Technical SEO (Phase 4f) complete — per-page unique title/description/canonical/OG via Next.js Metadata API, `app/sitemap.ts` + `app/robots.ts`, WebSite/WebApplication/FAQPage JSON-LD (no fake reviews), static H1 + how-to content on every play page, `/categories` discovery page, related-mode internal links, noindex on thin pages (stats, share, archive/[date], 404), canonical domain centralized in `src/lib/site-config.ts` via `NEXT_PUBLIC_SITE_URL`. 144 tests pass, static build verified.
 
 ## Deliverables
 
@@ -44,8 +48,7 @@ None.
 
 ## Next Actions
 
-1. Phase 4: Engineer implements code based on PRD + architecture + UX docs
-2. Set up Next.js project with static export
-3. Implement game engine (pure functions)
-4. Build UI components per UX spec
-5. Create content (50+ puzzles per mode)
+1. Phase 4d: Engineer implements UI — wire React components to the `src/storage/` actions API and game logic
+2. Re-introduce game engine (pure scoring/match/streak functions) when UI needs it
+3. Build UI components per UX spec
+4. Create content (50+ puzzles per mode)
