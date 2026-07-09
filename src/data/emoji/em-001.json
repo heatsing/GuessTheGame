@@ -1,0 +1,10 @@
+{
+  "id": "em-001",
+  "mode": "emoji",
+  "domain": "geography",
+  "target": "Volcano",
+  "aliases": ["volcano"],
+  "emojis": ["🌋", "💨", "🔥"],
+  "hints": { "category": "Geography", "firstLetter": "V" },
+  "fact": "A volcano is a rupture in Earth's crust that releases hot lava, ash, and volcanic gases."
+}

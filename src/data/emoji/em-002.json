@@ -1,0 +1,10 @@
+{
+  "id": "em-002",
+  "mode": "emoji",
+  "domain": "nature",
+  "target": "Octopus",
+  "aliases": ["octopus", "octopuses"],
+  "emojis": ["🐙", "🧠", "🌊", "🎨"],
+  "hints": { "category": "Nature", "firstLetter": "O" },
+  "fact": "An octopus is a soft-bodied, eight-limbed mollusk known for its intelligence and ability to change color."
+}

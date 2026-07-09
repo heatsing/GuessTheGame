@@ -1,0 +1,9 @@
+{
+  "id": "kw-002",
+  "mode": "keywords",
+  "domain": "everyday",
+  "target": "Compass",
+  "aliases": ["compass", "magnetic compass"],
+  "keywords": ["needle", "north", "magnet", "direction", "navigation", "orient"],
+  "fact": "A compass is a device that shows direction relative to geographic cardinal directions using Earth's magnetic field."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "tl-002",
+  "mode": "timeline",
+  "domain": "science",
+  "items": [
+    { "title": "Heliocentrism published", "description": "Copernicus places the Sun at the center of the solar system", "date": 1543 },
+    { "title": "Laws of motion published", "description": "Newton's Principia Mathematica", "date": 1687 },
+    { "title": "Theory of evolution", "description": "Darwin's On the Origin of Species", "date": 1859 },
+    { "title": "DNA double helix", "description": "Watson and Crick model DNA structure", "date": 1953 }
+  ],
+  "fact": "These discoveries reshaped our understanding of the universe, physics, life, and genetics across four centuries."
+}

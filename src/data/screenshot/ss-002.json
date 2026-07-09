@@ -1,0 +1,11 @@
+{
+  "id": "ss-002",
+  "mode": "screenshot",
+  "domain": "geography",
+  "target": "Sahara",
+  "aliases": ["sahara", "sahara desert"],
+  "image": "/images/puzzles/ss-002.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA Earth Observatory",
+  "fact": "The Sahara is the largest hot desert in the world, covering much of North Africa."
+}

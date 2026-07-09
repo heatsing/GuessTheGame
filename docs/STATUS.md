@@ -12,8 +12,8 @@
 | 2 | Architect | Static architecture + DECISIONS | done | docs: define static application architecture |
 | 3 | UX Designer | Sitemap + user flows + component states | done | docs: define user experience and interface system |
 | 4a | Engineer | Application shell | done | chore: initialize static application shell |
-| 4b | Content Architect | Puzzle content system | in progress | — |
-| 4c | Engine Engineer | Game engine | pending | — |
+| 4b | Content Architect | Puzzle content system | done | feat: add validated static puzzle content system |
+| 4c | Engine Engineer | Game engine | done | feat: implement shared puzzle game engine |
 | 4d | Engineer | UI implementation | pending | — |
 
 ## Key Decisions Log

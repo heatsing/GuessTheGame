@@ -12,10 +12,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "content:validate": "node scripts/validate-content.mjs",
-    "content:assets": "node scripts/check-assets.mjs",
-    "content:duplicates": "node scripts/check-duplicates.mjs",
-    "content:check": "node scripts/check-content.mjs"
+    "content:validate": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/validate-content.mjs",
+    "content:assets": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/check-assets.mjs",
+    "content:duplicates": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/check-duplicates.mjs",
+    "content:check": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/check-content.mjs"
   },
   "dependencies": {
     "next": "^15.1.0",

@@ -1,0 +1,9 @@
+{
+  "id": "kw-001",
+  "mode": "keywords",
+  "domain": "geography",
+  "target": "Volcano",
+  "aliases": ["volcano", "volcanoes"],
+  "keywords": ["mountain", "heat", "lava", "eruption", "magma", "crater"],
+  "fact": "A volcano is a rupture in the crust of a planetary-mass object that allows hot lava and volcanic ash to escape."
+}

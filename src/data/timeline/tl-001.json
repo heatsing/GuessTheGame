@@ -1,0 +1,12 @@
+{
+  "id": "tl-001",
+  "mode": "timeline",
+  "domain": "history",
+  "items": [
+    { "title": "Printing press invented", "description": "Gutenberg's movable-type press", "date": 1440 },
+    { "title": "Steam engine patented", "description": "Watt's improved steam engine", "date": 1769 },
+    { "title": "First airplane flight", "description": "Wright brothers at Kitty Hawk", "date": 1903 },
+    { "title": "Moon landing", "description": "Apollo 11", "date": 1969 }
+  ],
+  "fact": "These four inventions span over 500 years of human technological progress, from movable type to spaceflight."
+}
