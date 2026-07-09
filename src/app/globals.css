@@ -121,6 +121,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Heading/section anchors stay clear of the sticky header when jumped to. */
+h1, h2, h3, h4, h5, h6,
+section[aria-label] {
+  scroll-margin-top: var(--space-12);
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-bg);
@@ -240,6 +246,8 @@ img {
   font-family: var(--font-body);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color var(--duration-fast) var(--easing-standard),
     border-color var(--duration-fast) var(--easing-standard),
     color var(--duration-fast) var(--easing-standard);
@@ -323,6 +331,8 @@ img {
 
 .gtg-card-interactive {
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color var(--duration-fast) var(--easing-standard),
     box-shadow var(--duration-fast) var(--easing-standard);
 }
@@ -349,5 +359,38 @@ img {
   }
   .gtg-main {
     padding-bottom: var(--space-8);
+  }
+}
+
+/* =============================================================================
+   Modal — contain scroll so a wheel/trackpad gesture can't scroll the page
+   behind the dialog. Applied via the .gtg-modal-overlay / .gtg-modal classes
+   used by the Modal component.
+   ============================================================================= */
+.gtg-modal-overlay {
+  overscroll-behavior: contain;
+}
+
+.gtg-modal {
+  overscroll-behavior: contain;
+}
+
+/* =============================================================================
+   Reduced motion — honor the OS-level preference. Disables non-essential
+   animations (skeleton pulse, spinner, shake, modal enter, smooth scroll)
+   without removing the underlying transitions for users who want them.
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

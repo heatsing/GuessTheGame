@@ -8,17 +8,26 @@ export interface ModalProps {
   title?: string;
   children: ReactNode;
   labelledBy?: string;
+  /** ID of an element describing the dialog's purpose (optional). */
+  describedBy?: string;
 }
 
+/**
+ * Modal dialog with focus trapping, Escape-to-close, scroll lock, and
+ * background `inert` so screen readers and Tab key cannot reach page content
+ * behind the dialog while it is open.
+ */
 export function Modal({
   open,
   onClose,
   title,
   children,
   labelledBy,
+  describedBy,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const inertedEls = useRef<Element[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +59,19 @@ export function Modal({
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
 
+    // Mark siblings of the overlay as inert so the page behind is neither
+    // focusable nor announced by screen readers while the dialog is open.
+    const overlay = dialogRef.current?.parentElement;
+    inertedEls.current = [];
+    if (overlay && overlay.parentElement) {
+      for (const sib of Array.from(overlay.parentElement.children)) {
+        if (sib === overlay) continue;
+        if (sib.tagName === "SCRIPT") continue;
+        sib.setAttribute("inert", "");
+        inertedEls.current.push(sib);
+      }
+    }
+
     const focusable = dialogRef.current?.querySelector(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ) as HTMLElement | null;
@@ -58,6 +80,10 @@ export function Modal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      for (const el of inertedEls.current) {
+        el.removeAttribute("inert");
+      }
+      inertedEls.current = [];
       previouslyFocused.current?.focus();
     };
   }, [open, onClose]);
@@ -89,6 +115,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
+        aria-describedby={describedBy}
         className="gtg-modal"
         style={{
           backgroundColor: "var(--color-surface)",
