@@ -23,6 +23,7 @@
 - 2026-07-09: PRD complete — 5 game modes (Daily Mixed Challenge, Keywords, Emoji, Screenshot, Timeline), 45 acceptance criteria, 22 user stories.
 - 2026-07-09: Architecture complete — Next.js App Router static export, 8 ADRs, engine/UI separation, localStorage data layer with schema migration.
 - 2026-07-09: UX design complete — 12-page sitemap, full user flows, design tokens, 30+ component inventory, accessibility spec.
+- 2026-07-09: Infrastructure shell complete — Next.js 15.5.20, `output: 'export'` enabled, build wrapper handles Windows Defender phantom-file bug, dark theme via `color-scheme: dark`.
 
 ## Deliverables
 

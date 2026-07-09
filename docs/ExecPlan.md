@@ -1,16 +1,17 @@
 # ExecPlan — Guess the Game
 
 ## Phase A: Application Shell (DONE)
-- [x] Next.js App Router project initialized
+- [x] Next.js App Router project initialized (15.5.20)
 - [x] TypeScript strict mode configured
 - [x] Tailwind CSS v4 configured
 - [x] Design tokens in globals.css (from ux-design.md §13)
 - [x] Global layout with Header, Footer, BottomNav
 - [x] Base UI components: Button, Card, Modal, Toast, Skeleton, ErrorState
-- [x] 12 shell routes created
+- [x] 12 shell routes created + custom not-found.tsx
 - [x] Test environment (vitest + testing-library) with 35 passing tests
 - [x] typecheck, lint, test, build all passing
-- [x] Note: `output: 'export'` temporarily disabled (Windows _not-found bug)
+- [x] `output: 'export'` enabled (scripts/build.mjs handles Windows phantom-file bug)
+- [x] Dark mode: single dark theme via `color-scheme: dark`
 
 ## Phase B: Content System (DONE)
 - [x] Zod schemas for all 5 puzzle types (keywords, emoji, screenshot, timeline + discriminated union)

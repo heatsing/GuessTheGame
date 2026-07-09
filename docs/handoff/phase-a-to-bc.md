@@ -41,9 +41,11 @@ src/
 
 1. **Tailwind v4** via `@tailwindcss/postcss` — design tokens defined as CSS custom properties in `globals.css`, not in a Tailwind config
 2. **Components use inline styles** referencing `var(--token)` — keeps token source-of-truth in one place, no Tailwind config duplication
-3. **`output: 'export'` disabled** — Windows-only bug with `_not-found` chunk copyfile (Next.js issue #68993). Pages are still static-generated (SSG). Re-enable in Linux CI.
-4. **Next.js 15.1.0** (not 15.5) for stability
+3. **`output: 'export'` enabled** — static export is configured by default per ADR-001. On Windows, real-time antivirus (Defender) can create phantom files in the `_not-found` chunk; `scripts/build.mjs` detects this and falls back to a non-export build for local verification. CI/Vercel (Linux) builds export correctly.
+4. **Next.js 15.5.20** — upgraded from 15.1.0 for latest App Router patches
 5. **zod added** as dependency for Phase B content validation
+6. **Custom `not-found.tsx`** — accessible 404 page with design-system styling
+7. **Dark mode** — single dark theme via `color-scheme: dark` (PRD §4.2: no toggle in MVP)
 
 ## For the Content Architect
 
@@ -67,5 +69,6 @@ src/
 npm run typecheck   # tsc --noEmit
 npm run lint        # next lint
 npm run test        # vitest run
-npm run build       # next build (15 static pages)
+npm run build       # scripts/build.mjs (export with Windows fallback)
+npm run build:export # next build (explicit export, no fallback)
 ```
