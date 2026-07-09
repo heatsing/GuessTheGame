@@ -49,46 +49,6 @@ export default function HomePage() {
       </h1>
 
       <section
-        aria-label="Today's Daily Challenge"
-        style={{ marginBottom: "var(--space-10)" }}
-      >
-        <div className="gtg-card">
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--font-size-sm)",
-              marginBottom: "var(--space-2)",
-            }}
-          >
-            Today&apos;s Daily Challenge
-          </p>
-          <h2
-            style={{
-              fontSize: "var(--font-size-xl)",
-              marginBottom: "var(--space-3)",
-            }}
-          >
-            Daily Mixed Challenge
-          </h2>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              marginBottom: "var(--space-5)",
-            }}
-          >
-            4 puzzles · 2-3 min · resets at UTC midnight
-          </p>
-          <Link
-            href="/daily"
-            className="gtg-btn gtg-btn-primary gtg-btn-md"
-            style={{ textDecoration: "none" }}
-          >
-            Start
-          </Link>
-        </div>
-      </section>
-
-      <section
         aria-label="Quick play modes"
         style={{ marginBottom: "var(--space-10)" }}
       >

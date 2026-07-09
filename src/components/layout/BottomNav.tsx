@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 const bottomNavItems = [
   { href: "/", label: "Home", icon: "⌂" },
-  { href: "/daily", label: "Daily", icon: "★" },
   { href: "/play/keywords", label: "Play", icon: "▶" },
   { href: "/stats", label: "Stats", icon: "▤" },
   { href: "/archive", label: "More", icon: "≡" },
