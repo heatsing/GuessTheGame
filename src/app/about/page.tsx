@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "About Guess the Game — a static, no-login daily puzzle game built with IP-safe, public-domain content.",
-};
+import { PAGE_METADATA } from "@/lib/site-config";
+import { buildPageMetadata } from "@/lib/metadata";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: PAGE_METADATA.about.title,
+  description: PAGE_METADATA.about.description,
+  path: PAGE_METADATA.about.path,
+});
 
 export default function AboutPage() {
   return (
@@ -101,6 +105,29 @@ export default function AboutPage() {
           public-domain, originally authored, or generated silhouettes. This
           keeps the project legally distributable as a static, open build
           without relying on any third-party copyrighted material.
+        </p>
+      </section>
+
+      <section>
+        <h2
+          style={{
+            fontSize: "var(--font-size-lg)",
+            marginBottom: "var(--space-2)",
+          }}
+        >
+          Get started
+        </h2>
+        <p
+          style={{
+            color: "var(--color-text-muted)",
+            lineHeight: "var(--line-height-relaxed)",
+            marginBottom: "var(--space-3)",
+          }}
+        >
+          Ready to play? Read the{" "}
+          <Link href="/how-to-play">full rules for every mode</Link>, jump to a{" "}
+          <Link href="/play/keywords">practice round</Link>, or{" "}
+          <Link href="/categories">browse puzzles by category</Link>.
         </p>
       </section>
     </div>

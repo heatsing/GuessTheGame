@@ -1,10 +1,34 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import { SITE_CONFIG, canonicalUrl, absoluteUrl, PAGE_METADATA } from "@/lib/site-config";
+
 export const metadata: Metadata = {
-  title: { absolute: "Guess the Game — Daily puzzle challenges" },
-  description:
-    "Play five guessing game modes — Daily Mixed Challenge, Keywords, Emoji, Screenshot, and Timeline. No login, no ads, finishes in under three minutes.",
+  title: { absolute: PAGE_METADATA.home.title },
+  description: PAGE_METADATA.home.description,
+  alternates: {
+    canonical: canonicalUrl(PAGE_METADATA.home.path),
+  },
+  openGraph: {
+    title: PAGE_METADATA.home.title,
+    description: PAGE_METADATA.home.description,
+    url: canonicalUrl(PAGE_METADATA.home.path),
+    siteName: SITE_CONFIG.name,
+    type: "website",
+    images: [
+      {
+        url: absoluteUrl(SITE_CONFIG.ogImage),
+        alt: SITE_CONFIG.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: PAGE_METADATA.home.title,
+    description: PAGE_METADATA.home.description,
+    site: SITE_CONFIG.twitterHandle,
+    images: [absoluteUrl(SITE_CONFIG.ogImage)],
+  },
 };
 
 const quickModes = [
@@ -135,7 +159,9 @@ export default function HomePage() {
             <p>
               Prefer a specific mode? Jump straight into Keywords, Emoji,
               Screenshot, or Timeline from the quick-play tiles above for
-              unlimited practice rounds.
+              unlimited practice rounds, or browse the{" "}
+              <Link href="/categories">categories page</Link> to find puzzles
+              by topic.
             </p>
           </div>
         </details>

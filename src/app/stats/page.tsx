@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Stats",
-  description:
-    "Your personal Guess the Game statistics — current streak, max streak, best daily score, and a 30-day activity heatmap.",
-};
+import { PAGE_METADATA } from "@/lib/site-config";
+import { buildPageMetadata } from "@/lib/metadata";
+
+/**
+ * The stats page depends entirely on the player's local localStorage data —
+ * it has no crawlable static content. It is kept out of the sitemap, disallowed
+ * in robots.txt, and tagged `noindex` here so crawlers do not index a
+ * placeholder shell.
+ */
+export const metadata: Metadata = buildPageMetadata({
+  title: PAGE_METADATA.stats.title,
+  description: PAGE_METADATA.stats.description,
+  path: PAGE_METADATA.stats.path,
+  noindex: true,
+});
 
 const summaryStats = [
   { label: "Current streak", value: "—" },
@@ -96,6 +107,18 @@ export default function StatsPage() {
             Heatmap will appear here.
           </p>
         </div>
+      </section>
+
+      <section aria-label="Keep playing" style={{ marginTop: "var(--space-8)" }}>
+        <p
+          style={{
+            color: "var(--color-text-muted)",
+            fontSize: "var(--font-size-sm)",
+          }}
+        >
+          <Link href="/how-to-play">Learn how the streak works</Link> or{" "}
+          <Link href="/play/keywords">jump back into a practice round</Link>.
+        </p>
       </section>
     </div>
   );
