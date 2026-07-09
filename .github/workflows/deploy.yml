@@ -51,7 +51,11 @@ jobs:
       - name: Production build (static export → out/)
         run: npm run build
         env:
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          # Fall back to the Cloudflare Pages default domain when the variable
+          # is unset; an empty-string NEXT_PUBLIC_SITE_URL would break the
+          # build (site-config.ts uses `||` but we avoid the empty value
+          # entirely so metadata URLs are real from the first deploy).
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://guess-the-game.pages.dev' }}
 
       - name: Publish to Cloudflare Pages
         id: deploy

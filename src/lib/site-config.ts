@@ -32,7 +32,10 @@ export const SITE_CONFIG: SiteConfig = {
   shortName: "Guess the Game",
   description:
     "Play five guessing game modes — Daily Mixed Challenge, Keywords, Emoji, Screenshot, and Timeline. No login, no ads, plays in under three minutes.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL,
+  // `||` (not `??`) so an empty-string env var also falls back — a bare ""
+  // origin would produce invalid relative canonical/OG URLs and break the
+  // build (see docs/deployment.md §6).
+  url: process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL,
   locale: "en_US",
   twitterHandle: "@guessthegame",
   themeColor: "#0e1116",
