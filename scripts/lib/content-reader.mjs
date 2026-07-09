@@ -1,14 +1,14 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { PuzzleSchema, MODE_DIRECTORIES } from "../../src/lib/content/schemas.ts";
+import { parsePuzzle, MODE_DIRECTORIES } from "../../src/lib/content/schemas.ts";
 
 /**
  * Shared content reader for the validation scripts.
  *
- * Reads puzzle JSON files from `src/data/{mode}/` and validates each against
- * `PuzzleSchema`. The schema is imported directly from the TypeScript source
- * via Node's `--experimental-strip-types` flag, so there is a single source of
- * truth shared with the app and unit tests.
+ * Reads puzzle JSON files from `src/data/{mode}/` and validates each via
+ * `parsePuzzle` (mode-dispatched Zod schemas). The schemas are imported
+ * directly from the TypeScript source via Node's `--experimental-strip-types`
+ * flag, so there is a single source of truth shared with the app and unit tests.
  */
 
 const DATA_DIR = join(process.cwd(), "src", "data");
@@ -46,7 +46,7 @@ export function listPuzzleFiles() {
 export function readPuzzleFile(filePath) {
   const raw = readFileSync(filePath, "utf-8");
   const json = JSON.parse(raw);
-  const result = PuzzleSchema.safeParse(json);
+  const result = parsePuzzle(json);
   if (result.success) {
     return { ok: true, data: result.data, raw: json, error: null };
   }

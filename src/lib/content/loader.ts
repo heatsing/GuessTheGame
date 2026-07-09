@@ -4,18 +4,19 @@ import { join } from "node:path";
 import {
   MODE_DIRECTORIES,
   PREFIX_TO_MODE,
+  parsePuzzle,
   type Mode,
   type Puzzle,
   type PuzzleIndexRow,
-  PuzzleSchema,
 } from "./schemas";
 
 /**
  * Build-time content loader for Guess the Game.
  *
  * All data lives as static JSON under `src/data/{mode}/{id}.json`. This module
- * reads and validates those files with `PuzzleSchema` so that malformed content
- * fails loudly at build time rather than rendering broken UI.
+ * reads and validates those files with `parsePuzzle` (mode-dispatched Zod
+ * schemas) so that malformed content fails loudly at build time rather than
+ * rendering broken UI.
  *
  * No runtime backend, no database — see `docs/PRD.md` §1 and `docs/architecture.md`.
  */
@@ -37,7 +38,7 @@ function readPuzzleFile(filePath: string): Puzzle | null {
     console.error(`[content] Failed to parse ${filePath}:`, err);
     return null;
   }
-  const result = PuzzleSchema.safeParse(json);
+  const result = parsePuzzle(json);
   if (!result.success) {
     console.error(`[content] Invalid puzzle at ${filePath}:`);
     for (const issue of result.error.issues) {

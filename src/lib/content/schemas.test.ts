@@ -4,9 +4,10 @@ import {
   DomainEnum,
   EmojiPuzzleSchema,
   KeywordsPuzzleSchema,
-  PuzzleSchema,
   ScreenshotPuzzleSchema,
   TimelinePuzzleSchema,
+  parsePuzzle,
+  schemaForMode,
 } from "./schemas";
 
 // --- Valid base samples (mirror the fixture JSON in src/data/) ------------
@@ -57,163 +58,189 @@ const validTimeline = {
   fact: "Four inventions spanning 500 years of progress.",
 };
 
-describe("PuzzleSchema — valid puzzles", () => {
+describe("per-mode schemas — valid puzzles", () => {
   it("accepts a valid keywords puzzle", () => {
     expect(KeywordsPuzzleSchema.safeParse(validKeywords).success).toBe(true);
-    expect(PuzzleSchema.safeParse(validKeywords).success).toBe(true);
   });
 
   it("accepts a valid emoji puzzle", () => {
     expect(EmojiPuzzleSchema.safeParse(validEmoji).success).toBe(true);
-    expect(PuzzleSchema.safeParse(validEmoji).success).toBe(true);
   });
 
   it("accepts a valid screenshot puzzle", () => {
     expect(ScreenshotPuzzleSchema.safeParse(validScreenshot).success).toBe(true);
-    expect(PuzzleSchema.safeParse(validScreenshot).success).toBe(true);
   });
 
   it("accepts a valid timeline puzzle", () => {
     expect(TimelinePuzzleSchema.safeParse(validTimeline).success).toBe(true);
-    expect(PuzzleSchema.safeParse(validTimeline).success).toBe(true);
   });
 });
 
-describe("PuzzleSchema — missing required fields", () => {
-  it("fails when a required field (fact) is missing", () => {
+describe("per-mode schemas — missing required fields", () => {
+  it("keywords fails when fact is missing", () => {
     const { fact: _fact, ...missingFact } = validKeywords;
     void _fact;
-    const result = PuzzleSchema.safeParse(missingFact);
-    expect(result.success).toBe(false);
+    expect(KeywordsPuzzleSchema.safeParse(missingFact).success).toBe(false);
   });
 
-  it("fails when keywords.target is missing", () => {
+  it("keywords fails when target is missing", () => {
     const { target: _target, ...missingTarget } = validKeywords;
     void _target;
-    expect(PuzzleSchema.safeParse(missingTarget).success).toBe(false);
+    expect(KeywordsPuzzleSchema.safeParse(missingTarget).success).toBe(false);
   });
 
-  it("fails when screenshot.imageLicense is missing", () => {
+  it("screenshot fails when imageLicense is missing", () => {
     const { imageLicense: _license, ...missing } = validScreenshot;
     void _license;
-    expect(PuzzleSchema.safeParse(missing).success).toBe(false);
+    expect(ScreenshotPuzzleSchema.safeParse(missing).success).toBe(false);
   });
 
-  it("fails when timeline.fact is missing", () => {
+  it("timeline fails when fact is missing", () => {
     const { fact: _fact2, ...missing } = validTimeline;
     void _fact2;
-    expect(PuzzleSchema.safeParse(missing).success).toBe(false);
+    expect(TimelinePuzzleSchema.safeParse(missing).success).toBe(false);
   });
 });
 
-describe("PuzzleSchema — ID format", () => {
+describe("per-mode schemas — ID format", () => {
   it("fails on a malformed id (wrong digit count)", () => {
-    const result = PuzzleSchema.safeParse({ ...validKeywords, id: "kw-1" });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({ ...validKeywords, id: "kw-1" }).success,
+    ).toBe(false);
   });
 
   it("fails on a malformed id (uppercase prefix)", () => {
-    const result = PuzzleSchema.safeParse({ ...validKeywords, id: "KW-001" });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({ ...validKeywords, id: "KW-001" }).success,
+    ).toBe(false);
   });
 
   it("fails on a malformed id (non-alphabetic prefix)", () => {
-    const result = PuzzleSchema.safeParse({ ...validKeywords, id: "k1-001" });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({ ...validKeywords, id: "k1-001" }).success,
+    ).toBe(false);
   });
 
   it("fails on a malformed id (missing hyphen)", () => {
-    const result = PuzzleSchema.safeParse({ ...validKeywords, id: "kw001" });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({ ...validKeywords, id: "kw001" }).success,
+    ).toBe(false);
   });
 });
 
-describe("PuzzleSchema — array length constraints", () => {
+describe("per-mode schemas — array length constraints", () => {
   it("fails when keywords has fewer than 4 entries", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validKeywords,
-      keywords: ["mountain", "heat", "lava"],
-    });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({
+        ...validKeywords,
+        keywords: ["mountain", "heat", "lava"],
+      }).success,
+    ).toBe(false);
   });
 
   it("fails when timeline items has fewer than 4 entries", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validTimeline,
-      items: validTimeline.items.slice(0, 3),
-    });
-    expect(result.success).toBe(false);
+    expect(
+      TimelinePuzzleSchema.safeParse({
+        ...validTimeline,
+        items: validTimeline.items.slice(0, 3),
+      }).success,
+    ).toBe(false);
   });
 
   it("fails when emojis has fewer than 3 entries", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validEmoji,
-      emojis: ["🌋", "💨"],
-    });
-    expect(result.success).toBe(false);
+    expect(
+      EmojiPuzzleSchema.safeParse({
+        ...validEmoji,
+        emojis: ["🌋", "💨"],
+      }).success,
+    ).toBe(false);
   });
 
   it("fails when keywords has more than 8 entries", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validKeywords,
-      keywords: ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
-    });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({
+        ...validKeywords,
+        keywords: ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+      }).success,
+    ).toBe(false);
   });
 
   it("fails when timeline items has more than 6 entries", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validTimeline,
-      items: [
-        ...validTimeline.items,
-        { title: "X", description: "y", date: 2000 },
-        { title: "Z", description: "y", date: 2010 },
-        { title: "W", description: "y", date: 2020 },
-      ],
-    });
-    expect(result.success).toBe(false);
+    expect(
+      TimelinePuzzleSchema.safeParse({
+        ...validTimeline,
+        items: [
+          ...validTimeline.items,
+          { title: "X", description: "y", date: 2000 },
+          { title: "Z", description: "y", date: 2010 },
+          { title: "W", description: "y", date: 2020 },
+        ],
+      }).success,
+    ).toBe(false);
   });
 });
 
-describe("PuzzleSchema — domain", () => {
+describe("per-mode schemas — domain", () => {
   it("fails on an invalid domain", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validKeywords,
-      domain: "sports",
-    });
-    expect(result.success).toBe(false);
+    expect(
+      KeywordsPuzzleSchema.safeParse({ ...validKeywords, domain: "sports" })
+        .success,
+    ).toBe(false);
   });
 
   it("accepts every domain in the enum", () => {
     for (const domain of DomainEnum.options) {
-      const result = PuzzleSchema.safeParse({ ...validKeywords, domain });
-      expect(result.success).toBe(true);
+      expect(
+        KeywordsPuzzleSchema.safeParse({ ...validKeywords, domain }).success,
+      ).toBe(true);
     }
   });
 });
 
-describe("PuzzleSchema — discriminator", () => {
+describe("schemaForMode", () => {
+  it("returns the matching schema for each mode", () => {
+    expect(schemaForMode("keywords")).toBe(KeywordsPuzzleSchema);
+    expect(schemaForMode("emoji")).toBe(EmojiPuzzleSchema);
+    expect(schemaForMode("screenshot")).toBe(ScreenshotPuzzleSchema);
+    expect(schemaForMode("timeline")).toBe(TimelinePuzzleSchema);
+  });
+});
+
+describe("parsePuzzle — mode dispatch", () => {
+  it("accepts each valid puzzle via dispatch", () => {
+    expect(parsePuzzle(validKeywords).success).toBe(true);
+    expect(parsePuzzle(validEmoji).success).toBe(true);
+    expect(parsePuzzle(validScreenshot).success).toBe(true);
+    expect(parsePuzzle(validTimeline).success).toBe(true);
+  });
+
+  it("fails when mode is missing", () => {
+    const { mode: _mode, ...noMode } = validKeywords;
+    void _mode;
+    expect(parsePuzzle(noMode).success).toBe(false);
+  });
+
   it("fails on an unknown mode", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validKeywords,
-      mode: "riddle",
-    });
-    expect(result.success).toBe(false);
+    expect(parsePuzzle({ ...validKeywords, mode: "riddle" }).success).toBe(false);
   });
 
-  it("fails when mode does not match the puzzle's fields (keywords mode on a timeline body)", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validTimeline,
-      mode: "keywords",
-    });
-    expect(result.success).toBe(false);
+  it("fails when the body does not match the declared mode", () => {
+    // keywords body with timeline mode → timeline schema rejects target/aliases
+    expect(parsePuzzle({ ...validKeywords, mode: "timeline" }).success).toBe(
+      false,
+    );
+    // timeline body with keywords mode → keywords schema requires target/aliases
+    expect(parsePuzzle({ ...validTimeline, mode: "keywords" }).success).toBe(
+      false,
+    );
   });
 
-  it("fails when timeline mode is used with target/aliases instead of items", () => {
-    const result = PuzzleSchema.safeParse({
-      ...validKeywords,
-      mode: "timeline",
-    });
-    expect(result.success).toBe(false);
+  it("returns the parsed puzzle data on success", () => {
+    const result = parsePuzzle(validKeywords);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.id).toBe("kw-001");
+      expect(result.data.mode).toBe("keywords");
+    }
   });
 });

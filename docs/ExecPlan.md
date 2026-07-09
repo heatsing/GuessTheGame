@@ -14,25 +14,18 @@
 - [x] Dark mode: single dark theme via `color-scheme: dark`
 
 ## Phase B: Content System (DONE)
-- [x] Zod schemas for all 5 puzzle types (keywords, emoji, screenshot, timeline + discriminated union)
+- [x] Zod schemas for all 4 puzzle types (keywords, emoji, screenshot, timeline)
 - [x] GameEntry type with ID format validation (`^[a-z]{2}-\d{3}$`)
+- [x] `schemaForMode` + `parsePuzzle` mode-dispatch (no discriminated union)
 - [x] Content validation scripts (validate, assets, duplicates, check)
 - [x] 8 test fixtures (2 per mode)
-- [x] 22 schema unit tests
+- [x] 25 schema unit tests
 - [x] All content checks passing: 8/8 valid, 0 duplicates
 
-## Phase C: Game Engine (DONE)
-- [x] Answer normalization (case, punctuation, whitespace, articles)
-- [x] Match logic (aliases, case-insensitive, roman numerals, common aliases)
-- [x] Search index and prefix-based suggestions
-- [x] GameState discriminated union (4 mode-specific states)
-- [x] GameAction union + pure gameReducer
-- [x] Score calculation (all 4 modes + daily total + streak multiplier + final score)
-- [x] Position error calculation for Timeline
-- [x] Mode adapter interface (createInitialState, canSubmit, getProgress, serialize/deserialize)
-- [x] Serializable game state (JSON round-trip)
-- [x] 87 engine unit tests (normalize 7, match 9, scoring 30, reducer 22, adapter 12, search 7)
-- [x] Duplicate guess blocking, ended-game guard, empty answer guard
+## Phase C: Game Engine (REMOVED)
+- Engine (normalize, match, scoring, state, reducer, adapter, search) was
+  implemented and then reverted at owner request. Will be re-introduced when
+  UI implementation needs it. No engine code currently in the tree.
 
 ## Phase D: UI Implementation (FUTURE)
 - [ ] Wire components to engine

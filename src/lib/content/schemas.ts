@@ -114,15 +114,56 @@ export const TimelinePuzzleSchema = GameEntrySchema.omit({
 });
 export type TimelinePuzzle = z.infer<typeof TimelinePuzzleSchema>;
 
-// --- Discriminated union -------------------------------------------------
+// --- Mode dispatch (replaces the former discriminated union) -------------
 
-export const PuzzleSchema = z.discriminatedUnion("mode", [
-  KeywordsPuzzleSchema,
-  EmojiPuzzleSchema,
-  ScreenshotPuzzleSchema,
-  TimelinePuzzleSchema,
-]);
-export type Puzzle = z.infer<typeof PuzzleSchema>;
+/**
+ * Returns the Zod schema for a given mode.
+ *
+ * The content model deliberately avoids a top-level `z.discriminatedUnion`:
+ * each puzzle is validated against its own concrete schema, selected by the
+ * `mode` field. This keeps the validation path explicit and avoids the
+ * cross-mode type narrowing a union would impose on consumers.
+ */
+export function schemaForMode(mode: Mode) {
+  switch (mode) {
+    case "keywords":
+      return KeywordsPuzzleSchema;
+    case "emoji":
+      return EmojiPuzzleSchema;
+    case "screenshot":
+      return ScreenshotPuzzleSchema;
+    case "timeline":
+      return TimelinePuzzleSchema;
+  }
+}
+
+/**
+ * Parses an unknown JSON value as a puzzle, dispatching on its `mode` field.
+ * Returns `{ success, data }` like a Zod `safeParse`.
+ */
+export function parsePuzzle(json: unknown):
+  | { success: true; data: Puzzle }
+  | { success: false; error: import("zod").ZodError } {
+  const modeResult = ModeEnum.safeParse(
+    (json as { mode?: unknown } | null)?.mode,
+  );
+  if (!modeResult.success) {
+    return {
+      success: false,
+      error: modeResult.error,
+    };
+  }
+  return schemaForMode(modeResult.data).safeParse(json) as
+    | { success: true; data: Puzzle }
+    | { success: false; error: import("zod").ZodError };
+}
+
+/** Union of all puzzle types (type-level only — no runtime Zod union). */
+export type Puzzle =
+  | KeywordsPuzzle
+  | EmojiPuzzle
+  | ScreenshotPuzzle
+  | TimelinePuzzle;
 
 // --- Lightweight index row ----------------------------------------------
 

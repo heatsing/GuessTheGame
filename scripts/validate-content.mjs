@@ -1,6 +1,7 @@
 /**
- * validate-content.mjs — Validates every puzzle JSON file against the Zod
- * `PuzzleSchema`. Prints a pass/fail count and exits non-zero on any failure.
+ * validate-content.mjs — Validates every puzzle JSON file against its
+ * mode-specific Zod schema (via `parsePuzzle`). Prints a pass/fail count
+ * and exits non-zero on any failure.
  *
  * Run: `npm run content:validate`
  */

@@ -13,7 +13,7 @@
 | 3 | UX Designer | Sitemap + user flows + component states | done | docs: define user experience and interface system |
 | 4a | Engineer | Application shell | done | chore: initialize static application shell |
 | 4b | Content Architect | Puzzle content system | done | feat: add validated static puzzle content system |
-| 4c | Engine Engineer | Game engine | done | feat: implement shared puzzle game engine |
+| 4c | Engine Engineer | Game engine | removed | reverted — engine deferred |
 | 4d | Engineer | UI implementation | pending | — |
 
 ## Key Decisions Log
@@ -24,6 +24,7 @@
 - 2026-07-09: Architecture complete — Next.js App Router static export, 8 ADRs, engine/UI separation, localStorage data layer with schema migration.
 - 2026-07-09: UX design complete — 12-page sitemap, full user flows, design tokens, 30+ component inventory, accessibility spec.
 - 2026-07-09: Infrastructure shell complete — Next.js 15.5.20, `output: 'export'` enabled, build wrapper handles Windows Defender phantom-file bug, dark theme via `color-scheme: dark`.
+- 2026-07-09: Game engine (Phase 4c) reverted/removed at owner request. Content system simplified — removed `PuzzleSchema` discriminated union in favor of per-mode `schemaForMode`/`parsePuzzle` dispatch. Engine will be re-introduced when needed for UI implementation.
 
 ## Deliverables
 
