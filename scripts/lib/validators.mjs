@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readAllPuzzleFiles, getPublicDir, formatError } from "./content-reader.mjs";
+import { normalizeAnswer } from "../../src/lib/game/match.ts";
 
 /**
  * Three content-integrity checks used by the validation scripts:
@@ -11,11 +12,11 @@ import { readAllPuzzleFiles, getPublicDir, formatError } from "./content-reader.
  *
  * Each returns a structured result object so callers can render their own
  * output. `check-content.mjs` runs all three in a single process.
+ *
+ * `normalizeAnswer` is imported from `src/lib/game/match.ts` (the runtime
+ * single source of truth) via Node's `--experimental-strip-types` flag, so
+ * the validator and the game matcher can never diverge (ADR-002).
  */
-
-function normalizeAnswer(s) {
-  return String(s).toLowerCase().trim();
-}
 
 /** URL-safe slug derived from a target, e.g. "Mount Everest" -> "mount-everest". */
 function slugify(s) {

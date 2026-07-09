@@ -21,6 +21,8 @@
 | 4h | QA Engineer | Gameplay regression coverage | done | test: add comprehensive gameplay regression coverage |
 | 4i | Security Reviewer | Security, privacy & copyright review | done | docs: add security privacy and copyright review |
 | 4j | DevOps Engineer | Release pipeline | done | ci: add validated static deployment pipeline |
+| 4k | Chief Reviewer | Final code review (8 subagents) | done | docs: add final code review |
+| 4l | Acceptance Lead | Phase wrap-up + in-scope fixes | done | chore: phase 4e-4j acceptance and guardrails |
 
 ## Key Decisions Log
 
@@ -37,6 +39,8 @@
 - 2026-07-09: QA regression coverage (Phase 4h) complete — pure `src/lib/game/match.ts` (answer normalization / correct guess / duplicate detection / wrong-guess dedup) with 21 tests; component tests for GameImage/ResultAnnouncer/TimelineControls/ShareButton/Modal a11y/not-found; storage edge cases (daily date boundary, missing puzzle reference, empty bank, score floor, refresh recovery, reset); Playwright config + 3 e2e (homepage H1, keyboard nav to play page, 404 quick links). 203 unit + 3 e2e green; content:check + build verified.
 - 2026-07-09: Security/privacy/copyright review (Phase 4i) complete — read-only audit in `docs/SECURITY-REVIEW.md`. 1 High (fabricated image attribution on placeholder screenshots — ss-001/ss-002 claim NASA provenance for generated placeholders), 3 Medium (no Privacy/Contact page; static answer exposure undisclosed; no CSP/security headers), 4 Low. No secrets in repo; no PII in localStorage; no analytics/ads; no fake ratings.
 - 2026-07-09: Release pipeline (Phase 4j) complete — GitHub Actions CI (`ci.yml`: npm ci frozen install, typecheck, lint, test, content:check, build, e2e with caching + artifacts) and deploy (`deploy.yml`: fires only on CI success on main, Vercel prod deploy + 4-step smoke test). `vercel.json` (cache + security headers), `.env.example` template, `docs/deployment.md` (preview/prod deploy, domain switch, cache strategy, rollback, smoke test). Failed builds block deploy; unknown branches never deploy to prod.
+- 2026-07-09: Final code review (Phase 4k) complete — 8 independent subagents (correctness, security, game rules, test coverage, performance, accessibility, SEO, maintainability) ran read-only review. `docs/testing/final-code-review.md` records 60 deduplicated findings (P0×2, P1×11, P2×47). P0: fabricated NASA image attribution + missing `/og.png`. P1 cluster: storage/components well-built but have latent defects (no write-time validation, Modal inert scope, ToastProvider unmounted, divergent normalizeAnswer, give-up-not-locked, keywords max 8) that surface on Phase 4d wiring.
+- 2026-07-09: Acceptance wrap-up (Phase 4l) complete — verdict **PASS**. In-scope fixes: (1) AGENTS.md gained 13 enforceable Agent Guardrails (bilingual); (2) duplicate storage helpers extracted to `src/storage/internal.ts`, removing `subtractDays`/`dedupe`/`dedupeList` copies from client.ts + actions.ts; (3) `scripts/lib/validators.mjs` now imports `normalizeAnswer` from `src/lib/game/match.ts` (ADR-002 single source of truth); (4) KeywordsPuzzleSchema tightened `max(8)`→`max(6)` per PRD §5.2; (5) ss-001/ss-002 attribution relabeled to `placeholder` (false NASA claim removed); (6) SECURITY-REVIEW M-3 corrected (vercel.json already ships 4 security headers; real gap is CSP + X-Frame-Options). All 6 validation commands re-run green: typecheck / lint / 203 unit tests / content:check / 3 e2e / build. Carryover P0/P1 items deferred to Phase 4d per `docs/handoff/phase-4e-4j-acceptance.md`.
 
 ## Deliverables
 
@@ -52,11 +56,26 @@
 
 ## Blockers
 
-None.
+None for the current phase (4e–4j + acceptance). Phase 4d wiring is gated on the carryover P0/P1 items below.
+
+## Carryover to Phase 4d (must fix before game goes live)
+
+From `docs/testing/final-code-review.md`:
+- **P0-1 (remaining):** replace placeholder `.webp` files with verified IP-safe images (attribution relabeled this phase; assets still placeholders).
+- **P0-2:** create `public/og.png` (1200×630) — every OG share currently 404s.
+- **P1-1:** `saveState` write-time schema validation.
+- **P1-2:** Modal `inert` scope via `createPortal` (header/nav/footer still SR-reachable).
+- **P1-3:** Modal accessible name + `useId()` for title id.
+- **P1-4:** mount `<ToastProvider>` in layout (or remove `useToast`).
+- **P1-6:** lock `given_up` as terminal (no `given_up → solved` overwrite).
+- **P1-9:** wire game components into play pages.
+- **P1-10:** next-clue preload + real image compression tiers.
+- **P1-11:** `loader.ts` tests.
 
 ## Next Actions
 
-1. Phase 4d: Engineer implements UI — wire React components to the `src/storage/` actions API and game logic
-2. Re-introduce game engine (pure scoring/match/streak functions) when UI needs it
-3. Build UI components per UX spec
-4. Create content (50+ puzzles per mode)
+1. **Do not auto-advance to Phase 4d** (AGENTS.md guardrail #13) — await owner approval.
+2. Phase 4d: Engineer implements UI — wire React components to `src/storage/` actions + game logic; resolve carryover P0/P1 items above during wiring.
+3. Re-introduce game engine (pure scoring/match/streak functions) when UI needs it.
+4. Build UI components per UX spec.
+5. Create content (50+ puzzles per mode); replace screenshot placeholders with verified assets.

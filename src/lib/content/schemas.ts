@@ -61,8 +61,8 @@ export type GameEntry = z.infer<typeof GameEntrySchema>;
 
 export const KeywordsPuzzleSchema = GameEntrySchema.extend({
   mode: z.literal("keywords"),
-  /** 4-8 keyword clues ordered from vague to specific. */
-  keywords: z.array(z.string().min(1)).min(4).max(8),
+  /** 4-6 keyword clues ordered from vague to specific. PRD §5.2 caps at 6. */
+  keywords: z.array(z.string().min(1)).min(4).max(6),
 });
 export type KeywordsPuzzle = z.infer<typeof KeywordsPuzzleSchema>;
 

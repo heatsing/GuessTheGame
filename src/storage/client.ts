@@ -9,6 +9,7 @@ import {
 import { createDefaultState } from "./defaults";
 import { getDefaultAdapter } from "./adapter";
 import { migrate } from "./migrate";
+import { dedupe, dedupeAndCap, subtractDays } from "./internal";
 import type { DailyProgress, PersistedState } from "./types";
 
 /**
@@ -38,23 +39,6 @@ const CORRUPTED_KEY = STORAGE_KEY + ":corrupted";
  */
 function utcToday(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-/**
- * Subtracts `days` from a `YYYY-MM-DD` UTC date string, returning a new
- * `YYYY-MM-DD` string. Returns the input unchanged if it is malformed.
- */
-function subtractDays(dateStr: string, days: number): string {
-  const parts = dateStr.split("-").map(Number);
-  const y = parts[0];
-  const m = parts[1];
-  const d = parts[2];
-  if (y === undefined || m === undefined || d === undefined) {
-    return dateStr;
-  }
-  const date = new Date(Date.UTC(y, m - 1, d));
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
 }
 
 // --- Pruning helpers -----------------------------------------------------
@@ -96,29 +80,6 @@ function pruneLast30(
     }
   }
   return out;
-}
-
-/**
- * De-duplicates an array, preserving first-occurrence order.
- */
-function dedupe(ids: string[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const id of ids) {
-    if (!seen.has(id)) {
-      seen.add(id);
-      out.push(id);
-    }
-  }
-  return out;
-}
-
-/**
- * De-duplicates and truncates to the first `cap` entries (most-recent-first
- * when the input is already newest-first).
- */
-function dedupeAndCap(ids: string[], cap: number): string[] {
-  return dedupe(ids).slice(0, cap);
 }
 
 // --- Public API ----------------------------------------------------------

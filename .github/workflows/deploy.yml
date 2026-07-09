@@ -1,9 +1,12 @@
 name: Deploy
 
 # Production deployment is triggered ONLY after the CI workflow completes
-# successfully on the main branch. A failing typecheck/lint/test/content/build
-# therefore blocks deployment — there is no path to production that bypasses
-# the gate. Unknown branches are never deployed to production.
+# successfully on the master branch (the repo default branch). A failing
+# typecheck/lint/test/content/build therefore blocks deployment — there is
+# no path to production that bypasses the gate. Unknown branches are never
+# deployed to production.
+#
+# Target: Cloudflare Pages (static hosting of the `out/` export directory).
 on:
   workflow_run:
     workflows: [CI]
@@ -11,18 +14,19 @@ on:
 
 permissions:
   contents: read
+  deployments: write
 
 jobs:
   deploy:
-    name: Deploy to Vercel (production)
+    name: Deploy to Cloudflare Pages (production)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Only deploy when CI succeeded AND the run was on the main branch.
+    # Only deploy when CI succeeded AND the run was on the master branch.
     # workflow_run events fire for every CI completion; this guard is the
-    # single enforcer of "main-only production deploys".
+    # single enforcer of "master-only production deploys".
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'main'
+      github.event.workflow_run.head_branch == 'master'
 
     steps:
       - name: Checkout (at the commit CI verified)
@@ -40,41 +44,34 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Install Vercel CLI
-        run: npm install --no-save vercel@latest
-
-      - name: Pull Vercel project environment
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+      # Linux CI is unaffected by the Windows NTFS phantom-file bug; the
+      # first `next build` with `output: 'export'` succeeds and produces
+      # the `out/` directory consumed by Cloudflare Pages.
+      - name: Production build (static export → out/)
+        run: npm run build
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Build (Vercel build step)
-        run: vercel build --prod --token="$VERCEL_TOKEN"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
 
-      - name: Deploy to production
+      - name: Publish to Cloudflare Pages
         id: deploy
-        run: |
-          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
-          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-          echo "Production URL: $DEPLOY_URL"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: guess-the-game
+          directory: out
+          # Production deployment (not a preview branch deploy).
+          branch: master
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       # Post-release smoke test — fails the job (and signals a bad release)
       # if the deployed site does not serve the expected static content.
       - name: Smoke test
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         run: |
           set -euo pipefail
-          URL="${{ steps.deploy.outputs.url }}"
+          URL="${DEPLOY_URL}"
           echo "Smoke testing $URL"
 
           echo ":: [1/4] Homepage returns 200 and contains an H1"

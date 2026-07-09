@@ -78,10 +78,12 @@ export default function AboutPage() {
           }}
         >
           Topics span geography, science, history, nature, and everyday
-          objects — chosen for broad public knowledge. Screenshot mode uses
-          public-domain images (such as from Wikimedia Commons and NASA),
-          original illustrations, and generated silhouettes. Each image
-          carries attribution metadata where its license requires it.
+          objects — chosen for broad public knowledge. Screenshot mode will
+          use public-domain images (such as from Wikimedia Commons and NASA),
+          original illustrations, and generated silhouettes. During
+          development, screenshot fixtures carry a `placeholder` license label
+          and a generated placeholder image; each image will carry attribution
+          metadata where its license requires it before the mode ships.
         </p>
       </section>
 

@@ -1,13 +1,14 @@
 name: CI
 
-# Runs the full quality gate on every pull request and on every push to main.
-# The deploy workflow (deploy.yml) is triggered by THIS workflow succeeding,
-# so a failing check here blocks production deployment.
+# Runs the full quality gate on every pull request and on every push to the
+# default branch (master). The deploy workflow (deploy.yml) is triggered by
+# THIS workflow succeeding, so a failing check here blocks production
+# deployment.
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 # Cancel superseded runs on the same ref to save CI minutes.
 concurrency:

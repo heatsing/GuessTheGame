@@ -1,0 +1,26 @@
+# Cloudflare Pages headers configuration.
+#
+# This file is copied into `out/_headers` by the Next.js static export
+# (public/* → out/*) and read by Cloudflare Pages at serve time. It replaces
+# the former `vercel.json` headers block now that the site deploys to
+# Cloudflare Pages instead of Vercel.
+#
+# Rules are applied in order; for the same path, later headers override
+# earlier ones with the same key. Security headers apply to every route;
+# cache rules are tightened for content-hashed static assets.
+
+# --- Security headers + default cache (every route) ---
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cache-Control: public, max-age=0, must-revalidate
+
+# --- Content-hashed static assets: immutable forever ---
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Puzzle images: immutable per build ---
+/images/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,6 +1,7 @@
 import type { Mode } from "@/lib/content/schemas";
 import { RECENT_PUZZLES_CAP } from "./keys";
 import { createDefaultState } from "./defaults";
+import { dedupe, subtractDays } from "./internal";
 import {
   estimateSize,
   isStorageAvailable,
@@ -52,19 +53,6 @@ function modeToKey(mode: Mode): ModeKey {
 
 // --- Small pure helpers --------------------------------------------------
 
-/** De-duplicates a string array, preserving first-occurrence order. */
-function dedupeList(ids: string[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const id of ids) {
-    if (!seen.has(id)) {
-      seen.add(id);
-      out.push(id);
-    }
-  }
-  return out;
-}
-
 /**
  * Sums the scores of every present mode in a `DailyProgress` entry.
  * Returns 0 when no modes are present. Max theoretical value is 400
@@ -77,23 +65,6 @@ function computeDayTotal(day: DailyProgress): number {
   if (day.ss) total += day.ss.score;
   if (day.tl) total += day.tl.score;
   return total;
-}
-
-/**
- * Subtracts `days` from a `YYYY-MM-DD` UTC date string. Returns the input
- * unchanged if malformed.
- */
-function subtractDays(dateStr: string, days: number): string {
-  const parts = dateStr.split("-").map(Number);
-  const y = parts[0];
-  const m = parts[1];
-  const d = parts[2];
-  if (y === undefined || m === undefined || d === undefined) {
-    return dateStr;
-  }
-  const date = new Date(Date.UTC(y, m - 1, d));
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
 }
 
 /** Returns true if the value is a completed status (solved or given_up). */
@@ -204,7 +175,7 @@ export function recordModeResult(
     puzzleId: result.puzzleId,
     score: result.score,
     revealedClues: result.revealedClues,
-    wrongGuesses: dedupeList(result.wrongGuesses),
+    wrongGuesses: dedupe(result.wrongGuesses),
     status: result.status,
     updatedAt: new Date().toISOString(),
   };

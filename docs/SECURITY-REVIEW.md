@@ -16,7 +16,7 @@
 | Low | 4 |
 | Informational | 7 |
 
-No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. The single most important issue is **fabricated image attribution**: screenshot fixtures declare NASA provenance for files that are actually generated placeholders, which would misrepresent material ownership if shipped as-is.
+No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. The single most important issue is **fabricated image attribution**: screenshot fixtures declared NASA provenance for files that are actually generated placeholders — this has now been corrected in-code by relabeling the fixtures as `imageLicense: "placeholder"` (see H-1). The remaining Medium items are launch-time hardening (Privacy/Contact pages, CSP + clickjacking protection, answer-exposure honesty note).
 
 ---
 
@@ -28,20 +28,15 @@ _None._
 
 ## High
 
-### H-1. Fabricated image attribution on screenshot placeholders
+### H-1. Fabricated image attribution on screenshot placeholders — CORRECTED
 
 - **Location:** `src/data/screenshot/ss-001.json`, `src/data/screenshot/ss-002.json`; assets `public/images/puzzles/ss-001.webp`, `public/images/puzzles/ss-002.webp`
-- **Evidence:**
-  - `ss-001.json` declares `"imageLicense": "public-domain"` and `"imageAttribution": "NASA, via Wikimedia Commons"`.
-  - `ss-002.json` declares `"imageLicense": "public-domain"` and `"imageAttribution": "NASA Earth Observatory"`.
-  - The actual `ss-001.webp` is a ~9.5 KB generated placeholder: a solid navy background with the literal text `PLACEHOLDER / ss-001 Mount Everest / Replace with curated IP-safe WebP`. `ss-002.webp` is ~9.1 KB — likewise far too small to be a real satellite photo.
-  - The Zod schema (`ScreenshotPuzzleSchema`) requires `imageLicense` and `imageAttribution` to be non-empty strings, so validation enforces *presence* but never *truth* of the provenance claim.
-- **Impact:** The metadata asserts a specific real-world source (NASA) and license for assets the project does not actually hold under that license. This misrepresents material ownership/provenance — exactly the class of issue this review targets. If shipped, users and downstream reusers would rely on a false attribution. It also contradicts the About page's promise ("Screenshot mode uses public-domain images (such as from Wikimedia Commons and NASA)… Each image carries attribution metadata where its license requires it").
-- **Recommended fix (read-only suggestion):**
-  1. Replace placeholders with genuinely licensed images (public-domain NASA/Wikimedia files, verified per-file) **before** the screenshot mode goes live, and set `imageAttribution`/`imageLicense` to the real per-file values.
-  2. Until then, mark placeholder fixtures explicitly — e.g. `"imageLicense": "placeholder"`, `"imageAttribution": "Generated placeholder — not a licensed asset"` — so no false provenance is recorded.
-  3. Add a content-validation rule (in `scripts/lib/validators.mjs`) that rejects `imageAttribution` values containing known real-source names (NASA, Wikimedia, USGS, …) when the file is flagged as a placeholder, or that requires a `placeholder: true` boolean for generated assets.
-  4. Optionally store a source URL per image so attribution can be verified, not just asserted.
+- **Status:** **Corrected in-code this phase (2026-07-09).** Both fixtures now declare `"imageLicense": "placeholder"` and `"imageAttribution": "Generated placeholder — not a licensed asset. Replace with a verified IP-safe public-domain image before screenshot mode ships."` The false NASA provenance has been removed.
+- **Original evidence (preserved for traceability):**
+  - `ss-001.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA, via Wikimedia Commons"`.
+  - `ss-002.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA Earth Observatory"`.
+  - The actual `ss-001.webp` is a ~9.5 KB generated placeholder; `ss-002.webp` is ~9.1 KB — far too small to be real satellite photos.
+- **Remaining action before screenshot mode goes live:** replace the placeholder `.webp` files with genuinely licensed images (public-domain NASA/Wikimedia files, verified per-file) and set `imageAttribution`/`imageLicense` to the real per-file values, OR keep the `placeholder` label until then. A content-validation rule in `scripts/lib/validators.mjs` rejecting real-source names (NASA/Wikimedia/USGS) on placeholder-flagged assets is still recommended as a future guardrail.
 
 ---
 
@@ -61,12 +56,13 @@ _None._
 - **Impact:** Not a vulnerability — this is the unavoidable tradeoff of a static, no-backend game (same as Wordle-style clones). The concern is *honesty*: the product should not imply answers are server-protected. Low real-world risk because the game is single-player and honor-system.
 - **Recommended fix:** Add a short note to `/how-to-play` or About acknowledging that, like all browser-only puzzle games, answers are present in the page bundle and the game runs on an honor system. No code change required; this is a copy/trust clarification.
 
-### M-3. No Content-Security-Policy or security headers configured
+### M-3. No Content-Security-Policy; no X-Frame-Options / frame-ancestors (clickjacking)
 
-- **Location:** `next.config.mjs` (no `headers()` configured); static export means headers are served by the host (Vercel), but no CSP is authored.
-- **Evidence:** `nextConfig` sets only `output`, `images`, `trailingSlash`, `reactStrictMode`. No `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, or `Permissions-Policy` headers are defined.
-- **Impact:** Without a CSP, any future injection of inline script or third-party asset would execute without restriction. Currently low because the app injects no untrusted content and uses `dangerouslySetInnerHTML` only for hardcoded JSON-LD (`src/lib/structured-data.ts` — app-authored, not user input), but a CSP is cheap defense-in-depth and recommended before production.
-- **Recommended fix:** Add a `headers()` block in `next.config.mjs` (or a `vercel.json`/`public/_headers` for the static host) with a strict CSP (`default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy` for unused features. Verify JSON-LD still renders (inline `<script type="application/ld+json">` requires `script-src 'self'` to allow it, or a nonce/hash).
+- **Location:** `public/_headers` (Cloudflare Pages headers, copied to `out/_headers` by static export); `next.config.mjs` (no `headers()`).
+- **Evidence:** `public/_headers` **does** configure four security headers — `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (incl. `interest-cohort=()`), and `Strict-Transport-Security` (HSTS preload). An earlier draft of this report incorrectly claimed no security headers were configured; that was inaccurate and has been corrected. (The headers were previously in `vercel.json`; they migrated to `public/_headers` when the deployment target switched from Vercel to Cloudflare Pages.) The real remaining gap is the absence of a `Content-Security-Policy` and any `X-Frame-Options` / `frame-ancestors` directive.
+- **Impact:** Without a CSP, any future injection of inline script or third-party asset would execute without restriction. Without `frame-ancestors`/`X-Frame-Options`, the static pages can be embedded in arbitrary iframes (clickjacking). Currently low because the app injects no untrusted content and uses `dangerouslySetInnerHTML` only for hardcoded JSON-LD (`src/lib/structured-data.ts` — app-authored, not user input), but both are cheap defense-in-depth and recommended before production.
+- **Recommended fix:** Add a strict CSP (`default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'`) to `public/_headers`. Inline JSON-LD `<script type="application/ld+json">` is allowed under `script-src 'self'` (it is not inline event handler / eval). Verify JSON-LD still renders after the CSP lands.
+- **Severity note:** Downgraded from the original "no security headers" framing to a focused Low-equivalent gap (kept as Medium here only because CSP + clickjacking protection is a launch-time recommendation, not a current vulnerability).
 
 ---
 
@@ -141,9 +137,9 @@ The About page's "Content sources" and "IP-safe strategy" sections are well-inte
 
 ## Recommended Action Priority
 
-1. **H-1** (fabricated attribution) — fix before any screenshot-mode content is exposed publicly; either ship verified assets or relabel placeholders.
+1. **H-1** (fabricated attribution) — **corrected in-code this phase**: fixtures relabeled to `imageLicense: "placeholder"`. Verified assets must still replace placeholders before screenshot mode ships publicly.
 2. **M-1** (Privacy + Contact pages) — add before production launch.
-3. **M-3** (CSP/security headers) — add before production launch.
+3. **M-3** (CSP + X-Frame-Options/frame-ancestors) — add before production launch (note: `vercel.json` already ships 4 other security headers).
 4. **M-2** (answer-exposure honesty note) — copy addition, low effort.
 5. **L-1 … L-4** — hardening, address opportunistically.
 
