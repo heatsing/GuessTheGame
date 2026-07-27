@@ -17,7 +17,22 @@ export const metadata: Metadata = buildPageMetadata({
   noindex: true,
 });
 
-// Shell placeholder — will be replaced with real result IDs when sharing is implemented.
+/**
+ * Strict format for shareable result IDs: 8–32 lowercase alphanumeric chars.
+ * Result IDs are app-generated (never user-typed), so any value outside this
+ * alphabet/length is treated as invalid and a fallback is rendered instead of
+ * echoing the raw segment. This closes the L-1 SECURITY-REVIEW finding: React
+ * already escapes the value (no XSS), but validating avoids displaying arbitrary
+ * junk text from crafted `/share/<long-junk>` URLs.
+ *
+ * When the ShareButton is later wired to produce real result IDs, the generator
+ * MUST emit values matching this regex.
+ */
+const RESULT_ID_REGEX = /^[a-z0-9]{8,32}$/;
+
+// Shell placeholder — will be replaced with real result IDs when sharing is
+// implemented. "placeholder" matches RESULT_ID_REGEX (11 lowercase chars) so
+// the prerendered page renders the normal shell, not the invalid fallback.
 export function generateStaticParams(): { "result-id": string }[] {
   return [{ "result-id": "placeholder" }];
 }
@@ -29,6 +44,49 @@ export default async function SharedResultPage({
 }) {
   const resolved = await params;
   const resultId = resolved["result-id"];
+
+  // L-1: reject malformed segments before rendering. Under `output: 'export'`
+  // only `generateStaticParams` paths are prerendered, so unknown segments 404
+  // in production. This guard covers `next dev` / preview where arbitrary
+  // segments render, and is defense-in-depth for production.
+  if (!RESULT_ID_REGEX.test(resultId)) {
+    return (
+      <div
+        style={{
+          maxWidth: "640px",
+          margin: "0 auto",
+          padding: "var(--space-6) var(--space-4)",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "var(--font-size-2xl)",
+            marginBottom: "var(--space-3)",
+          }}
+        >
+          Invalid Result
+        </h1>
+        <p
+          style={{
+            color: "var(--color-text-muted)",
+            lineHeight: "var(--line-height-relaxed)",
+            marginBottom: "var(--space-6)",
+          }}
+        >
+          The shared result link is invalid or has expired.
+        </p>
+        <p
+          style={{
+            color: "var(--color-text-muted)",
+            fontSize: "var(--font-size-sm)",
+          }}
+        >
+          <Link href="/">Back to home</Link> ·{" "}
+          <Link href="/how-to-play">How to play</Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

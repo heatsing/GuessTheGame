@@ -11,12 +11,12 @@
 | Severity | Count |
 |----------|-------|
 | Critical | 0 |
-| High | 1 |
-| Medium | 3 |
-| Low | 4 |
+| High | 0 (all resolved) |
+| Medium | 1 (M-1 Privacy/Contact pages — deferred) |
+| Low | 0 (all resolved) |
 | Informational | 7 |
 
-No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. The previously most important issue — **fabricated image attribution** (H-1) — is now **fully resolved**: both screenshot fixtures have been replaced with verified public-domain NASA images sourced from Wikimedia Commons, with per-file attribution set to the real license metadata (see H-1). The remaining Medium items are launch-time hardening (Privacy/Contact pages, CSP + clickjacking protection, answer-exposure honesty note).
+No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. All previously identified High and Low findings are now **fully resolved**: H-1 (fabricated image attribution), L-1 (share route validation), L-2 (CI dependency scan), L-3 (JSON-LD price type), and L-4 (corrupted-state cleanup). The only remaining open item is M-1 (Privacy + Contact pages), which requires new routes and is deferred to post-4d-acceptance per the "no new features during acceptance" preference.
 
 ---
 
@@ -79,33 +79,34 @@ _None._
 
 ## Low
 
-### L-1. Share route reflects unvalidated URL segment
+### L-1. Share route reflects unvalidated URL segment — RESOLVED
 
 - **Location:** `src/app/share/[result-id]/page.tsx` — `{resultId}` rendered into a `<p>`.
-- **Evidence:** `resultId` comes from the route param and is rendered directly. React auto-escapes, so there is **no XSS**. However the value is not validated against an expected format (e.g. a result-ID alphabet/length) before rendering. In `next dev` arbitrary segments render; under `output: 'export'` only `generateStaticParams` paths ("placeholder") are prerendered, so unknown segments 404 in production.
-- **Impact:** Minimal — no script execution. At most, a crafted `/share/<long-junk>` URL would display junk text in dev/preview.
-- **Recommended fix:** Validate `resultId` against a strict regex (e.g. `^[a-z0-9]{8,32}$`) and render a sanitized/fallback label otherwise; or display a generic "Shared Result" heading without echoing the raw ID.
+- **Status:** **Resolved (2026-07-27).** The share page now validates `resultId` against a strict regex `^[a-z0-9]{8,32}$` before rendering. Values outside this alphabet/length trigger an "Invalid Result" fallback that does not echo the raw segment. 12 unit tests cover valid IDs (8-char, 32-char, placeholder), invalid IDs (too short, too long, uppercase, `<script>`, path traversal, URL-encoded payloads), and verify the raw segment is never echoed into the DOM.
+- **Evidence:** `resultId` comes from the route param and was previously rendered directly. React auto-escapes, so there was **no XSS**. However the value was not validated against an expected format before rendering. In `next dev` arbitrary segments rendered; under `output: 'export'` only `generateStaticParams` paths ("placeholder") are prerendered, so unknown segments 404 in production. The validation is now defense-in-depth for dev/preview and production.
+- **Implementation:** `RESULT_ID_REGEX = /^[a-z0-9]{8,32}$/` defined in the page module. When the ShareButton is later wired to produce real result IDs, the generator MUST emit values matching this regex (documented in the page source).
 
-### L-2. No dependency vulnerability scan in CI
+### L-2. No dependency vulnerability scan in CI — RESOLVED
 
-- **Location:** `package.json` scripts; no `npm audit` / `pnpm audit` step.
-- **Evidence:** Dependencies are minimal and mainstream (`next`, `react`, `react-dom`, `zod` + standard dev tooling). No supply-chain scan is wired into the build gate.
-- **Impact:** Low today (small, reputable dep tree), but a known-vulnerable transitive dep would not be caught automatically.
-- **Recommended fix:** Add an `audit` step (`npm audit --omit=dev --audit-level=high`) to CI, or enable Dependabot. Non-blocking on warnings, blocking on `high`/`critical`.
+- **Location:** `.github/workflows/ci.yml` — dependency audit steps.
+- **Status:** **Resolved (2026-07-27).** CI now runs a two-tier dependency audit:
+  - **Tier 1 (blocking):** `npm audit --omit=dev --audit-level=critical` — fails the build on any CRITICAL-severity vulnerability in production dependencies. Verified to exit 0 with the current dependency tree.
+  - **Tier 2 (advisory):** `npm audit --omit=dev --audit-level=high` with `continue-on-error: true` — surfaces HIGH-severity advisories in the CI log without blocking the gate.
+- **Known HIGH advisories (non-blocking, documented in CI comments):** 3 HIGH-severity vulnerabilities exist in `next`'s transitive dependency tree (postcss ≤8.5.17, sharp <0.35.0) and in `next` itself (GHSA-m99w-x7hq-7vfj et al.). The `next` advisory range (9.3.4-canary.0 – 16.3.0-preview.7) covers ALL released versions — no fixed version exists yet. The vulnerabilities affect Server Actions, SSR, Image Optimization API, and rewrites, NONE of which are used in a static-export app (`output: 'export'`, no server runtime). npm's suggested "fix" (downgrade to next@9.3.3) is nonsensical and was not applied. When a fixed `next` version is released, the advisory audit will pass clean and Tier 2 can be upgraded to blocking.
+- **Dependency upgrade applied:** `npm audit fix` upgraded `next` 15.5.20 → 15.5.22 (security patch, same minor version, compliant with AGENTS.md guardrail #2) and updated transitive `postcss`/`@next/swc-*` packages. All validation gates re-verified green after the upgrade.
+- **Original evidence:** Dependencies are minimal and mainstream (`next`, `react`, `react-dom`, `zod` + standard dev tooling). The supply-chain scan is now wired into the build gate with two-tier enforcement.
 
-### L-3. JSON-LD `offers.price` is a string, not a number
+### L-3. JSON-LD `offers.price` is a string, not a number — RESOLVED
 
-- **Location:** `src/lib/structured-data.ts` — `webApplicationSchema()` sets `offers: { price: "0", priceCurrency: "USD" }`.
-- **Evidence:** schema.org `Offer.price` expects a Number or numeric string; `"0"` is accepted but `"0.00"` style is more conventional. This is a correctness/structured-data nit, not a security issue.
-- **Impact:** Negligible. Could cause some rich-result validators to flag the price representation.
-- **Recommended fix:** Use `price: 0` (number) or `"0.00"`. Purely cosmetic for SEO validation.
+- **Location:** `src/lib/structured-data.ts` — `webApplicationSchema()` sets `offers: { price: 0, priceCurrency: "USD" }`.
+- **Status:** **Resolved (Phase 4m, 2026-07-16).** The `price` field is now a number (`0`), not a string (`"0"`). schema.org `Offer.price` accepts both Number and numeric string; the number form is the conventional representation and passes all rich-result validators.
+- **Original evidence:** An earlier version of `webApplicationSchema()` set `price: "0"` (string). This was a correctness/structured-data nit, not a security issue.
 
-### L-4. Corrupted-state stash key has no size/rotation bound
+### L-4. Corrupted-state stash key has no size/rotation bound — RESOLVED
 
 - **Location:** `src/storage/client.ts` — `CORRUPTED_KEY = STORAGE_KEY + ":corrupted"`; `loadState` writes the raw corrupted string there on parse failure.
-- **Evidence:** On JSON corruption the raw string is copied to `:corrupted` "best-effort". If corruption recurs repeatedly (e.g. a buggy extension mangling localStorage), the stash is overwritten each time (no history) and is never cleaned up automatically.
-- **Impact:** Low — at most one stale corrupted blob lingers in localStorage; it does not contain PII (only game state). Not a privacy issue, just minor hygiene.
-- **Recommended fix:** Optional: clear `:corrupted` on a successful `saveState`, or cap its size. Document that `resetState()` (the "clear my data" UI) should also remove `:corrupted`.
+- **Status:** **Resolved (Phase 4m, 2026-07-16).** `saveState` now clears the `:corrupted` key on every successful write (line 219: `adapter.removeItem(CORRUPTED_KEY)`), so a healthy write removes any previously stashed corrupted payload. `resetState()` (the "clear my data" UI) also removes both `STORAGE_KEY` and `CORRUPTED_KEY` (line 241), providing a true clean slate. The stash is still best-effort (never overwrites the primary key) and contains only game state (no PII).
+- **Original evidence:** On JSON corruption the raw string was copied to `:corrupted` "best-effort" but was never cleaned up automatically. If corruption recurred repeatedly, a stale corrupted blob could linger in localStorage. This is now addressed by the saveState/resetState cleanup.
 
 ---
 
@@ -149,9 +150,12 @@ The About page's "Content sources" and "IP-safe strategy" sections are well-inte
 ## Recommended Action Priority
 
 1. **H-1** (fabricated attribution) — **resolved (2026-07-26)**: placeholder `.webp` files replaced with verified public-domain NASA images from Wikimedia Commons; per-file attribution set to real license metadata.
-2. **M-1** (Privacy + Contact pages) — add before production launch.
+2. **M-1** (Privacy + Contact pages) — the only remaining open item; add before production launch. Deferred to post-4d-acceptance per the "no new features during acceptance" preference.
 3. **M-3** (CSP + X-Frame-Options/frame-ancestors) — **resolved (Phase 4m, 2026-07-16)**: strict CSP + `X-Frame-Options: DENY` shipped in `public/_headers`; CSP tightening audited 2026-07-26 and confirmed as strict as practical for Next.js static export.
 4. **M-2** (answer-exposure honesty note) — **resolved (2026-07-26)**: honor-system paragraph added to the About page.
-5. **L-1 … L-4** — hardening, address opportunistically.
+5. **L-1** (share route validation) — **resolved (2026-07-27)**: `RESULT_ID_REGEX` validation + 12 unit tests.
+6. **L-2** (CI dependency scan) — **resolved (2026-07-27)**: two-tier audit (blocking on critical, advisory on high) + next 15.5.22 security patch.
+7. **L-3** (JSON-LD price type) — **resolved (Phase 4m, 2026-07-16)**: `price: 0` (number).
+8. **L-4** (corrupted-state cleanup) — **resolved (Phase 4m, 2026-07-16)**: `saveState`/`resetState` clear `:corrupted` key.
 
-This review is read-only; no business implementation was modified.
+All security findings except M-1 are now resolved.

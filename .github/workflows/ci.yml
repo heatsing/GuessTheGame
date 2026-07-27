@@ -41,10 +41,33 @@ jobs:
       - name: Install dependencies (npm ci — frozen lockfile)
         run: npm ci
 
-      # Dependency vulnerability scan. continue-on-error: true so high-severity
-      # advisories are surfaced in the run log without blocking the gate — the
-      # goal at this stage is visibility, not enforcement.
-      - name: Dependency audit (npm audit)
+      # Dependency vulnerability scan — two-tier enforcement (L-2).
+      #
+      # Tier 1 (blocking): CRITICAL-severity vulnerabilities in production
+      # dependencies fail the build. This is the hard security gate.
+      #
+      # Tier 2 (advisory): HIGH-severity vulnerabilities are surfaced in the
+      # run log but do not block CI. This is non-blocking because the current
+      # dependency tree has 3 known HIGH advisories that cannot be resolved
+      # without a framework upgrade pending owner approval (guardrail #2):
+      #
+      #   - next (GHSA-m99w-x7hq-7vfj et al.): advisory range covers ALL
+      #     released versions (9.3.4-canary.0 – 16.3.0-preview.7). The
+      #     vulnerabilities affect Server Actions, SSR, Image Optimization
+      #     API, and rewrites — NONE of which are used in a static-export
+      #     app (`output: 'export'`, no server runtime).
+      #   - postcss <=8.5.17 (transitive via next): CSS source-map / stringify
+      #     issues, only relevant at build time with attacker-controlled CSS.
+      #   - sharp <0.35.0 (transitive via next): libvips image-decode CVEs,
+      #     only relevant if processing untrusted images server-side.
+      #
+      # npm's suggested "fix" (downgrade to next@9.3.3) is nonsensical. When
+      # a fixed next version is released, the advisory audit will pass clean
+      # and this step can be upgraded to blocking.
+      - name: Dependency audit — CRITICAL (blocking)
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Dependency audit — HIGH (advisory)
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
 
