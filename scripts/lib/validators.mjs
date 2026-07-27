@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readAllPuzzleFiles, getPublicDir, formatError } from "./content-reader.mjs";
 import { normalizeAnswer } from "../../src/lib/game/match.ts";
@@ -45,24 +45,94 @@ export function validateAll() {
 
 // --- 2. Asset check ------------------------------------------------------
 
+/**
+ * Per-image size caps (DECISIONS.md §image-pipeline). The main WebP cap leaves
+ * headroom for quality ~78 at 800×600; the blurSrc cap is generous for a tiny
+ * LQIP thumbnail (target 1-3 KB, hard cap 5 KB).
+ */
+const IMAGE_MAX_KB = 80;
+const BLUR_SRC_MAX_KB = 5;
+
+/**
+ * Checks that every screenshot puzzle's `image` (and optional `blurSrc`)
+ * resolves to a real file under `public/`, and that each file is within the
+ * size cap from DECISIONS.md. Exits non-zero if any referenced image is
+ * missing or oversized.
+ */
 export function checkAssets() {
   const files = readAllPuzzleFiles();
   const referenced = [];
   for (const f of files) {
     if (!f.ok) continue;
     if (f.data.mode === "screenshot") {
-      referenced.push({ id: f.data.id, image: f.data.image, file: f.path });
+      referenced.push({
+        id: f.data.id,
+        image: f.data.image,
+        blurSrc: f.data.blurSrc,
+        file: f.path,
+      });
     }
   }
   const missing = [];
+  const oversized = [];
+
   for (const ref of referenced) {
-    const rel = ref.image.replace(/^\/+/, "");
-    const abs = join(getPublicDir(), rel);
-    if (!existsSync(abs)) {
-      missing.push({ ...ref, expectedPath: abs });
+    // Main image: existence + size cap.
+    const mainResult = checkAssetFile(ref.image, IMAGE_MAX_KB, ref.id);
+    if (mainResult.missing) {
+      missing.push({ ...ref, expectedPath: mainResult.absPath });
+    } else if (mainResult.oversized) {
+      oversized.push({
+        id: ref.id,
+        path: ref.image,
+        sizeKB: mainResult.sizeKB,
+        capKB: IMAGE_MAX_KB,
+        kind: "image",
+      });
+    }
+
+    // blurSrc (LQIP thumbnail): existence + size cap, only when defined.
+    if (ref.blurSrc) {
+      const blurResult = checkAssetFile(ref.blurSrc, BLUR_SRC_MAX_KB, ref.id);
+      if (blurResult.missing) {
+        missing.push({ id: ref.id, image: ref.blurSrc, expectedPath: blurResult.absPath });
+      } else if (blurResult.oversized) {
+        oversized.push({
+          id: ref.id,
+          path: ref.blurSrc,
+          sizeKB: blurResult.sizeKB,
+          capKB: BLUR_SRC_MAX_KB,
+          kind: "blurSrc",
+        });
+      }
     }
   }
-  return { referenced, missing, checked: referenced.length };
+
+  return {
+    referenced,
+    missing,
+    oversized,
+    checked: referenced.length,
+  };
+}
+
+/**
+ * Checks a single asset path: resolves under `public/`, confirms it exists,
+ * and verifies its size is within `capKB`.
+ */
+function checkAssetFile(relPath, capKB, id) {
+  const rel = relPath.replace(/^\/+/, "");
+  const abs = join(getPublicDir(), rel);
+  if (!existsSync(abs)) {
+    return { missing: true, oversized: false, absPath: abs, sizeKB: 0 };
+  }
+  const sizeKB = statSync(abs).size / 1024;
+  return {
+    missing: false,
+    oversized: sizeKB > capKB,
+    absPath: abs,
+    sizeKB: Math.round(sizeKB * 10) / 10,
+  };
 }
 
 // --- 3. Duplicate check --------------------------------------------------

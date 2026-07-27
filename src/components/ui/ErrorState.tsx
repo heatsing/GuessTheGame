@@ -59,7 +59,7 @@ export function ErrorState({
           className="gtg-btn gtg-btn-outline gtg-btn-md"
           style={{
             marginTop: "var(--space-2)",
-            minHeight: "44px",
+            minHeight: "var(--touch-target-min)",
             padding: "var(--space-2) var(--space-4)",
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--color-border)",

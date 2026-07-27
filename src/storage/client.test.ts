@@ -10,8 +10,9 @@ import {
   resetState,
   saveState,
 } from "./client";
-import { CURRENT_SCHEMA_VERSION, STORAGE_KEY } from "./keys";
+import { CURRENT_SCHEMA_VERSION, SOFT_QUOTA_BYTES, STORAGE_KEY } from "./keys";
 import type { PersistedState, PersistedStateV1 } from "./types";
+import { daysAgo, todayUtc } from "./__testutils__/helpers";
 
 /**
  * Client (low-level read/write) unit tests.
@@ -19,18 +20,6 @@ import type { PersistedState, PersistedStateV1 } from "./types";
  * Uses a fresh memory adapter per test via __setAdapterForTesting so tests
  * are isolated and never touch real localStorage.
  */
-
-// --- Date helpers (mirror the production UTC math) ----------------------
-
-function todayUtc(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function daysAgo(n: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
-}
 
 // --- Shared fixtures -----------------------------------------------------
 
@@ -250,6 +239,107 @@ describe("resetState", () => {
     resetState();
     expect(adapter.getItem(STORAGE_KEY)).toBeNull();
   });
+
+  it("also clears any stashed :corrupted payload (P2-7)", () => {
+    const adapter = createMemoryAdapter();
+    __setAdapterForTesting(adapter);
+    adapter.setItem(STORAGE_KEY + ":corrupted", "{ broken");
+
+    resetState();
+    expect(adapter.getItem(STORAGE_KEY + ":corrupted")).toBeNull();
+  });
+});
+
+describe("saveState — availability & validation (P2-27, P1-1)", () => {
+  it("returns { ok: false, error: 'unavailable' } when the adapter reports unavailable (P2-27)", () => {
+    const unavailable: StorageAdapter = {
+      getItem: () => null,
+      setItem: () => {
+        // no-op
+      },
+      removeItem: () => {
+        // no-op
+      },
+      isAvailable: () => false,
+    };
+    __setAdapterForTesting(unavailable);
+
+    const result = saveState(createDefaultState());
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("unavailable");
+  });
+
+  it("returns { ok: false, error: 'invalid' } and does NOT write when the state fails V2 schema (P1-1)", () => {
+    const adapter = createMemoryAdapter();
+    __setAdapterForTesting(adapter);
+
+    // Construct a state with an out-of-range score (V2Schema caps at 100).
+    // We bypass actions.ts (which clamps) and feed the bad value straight to
+    // saveState to verify the write-time guard.
+    const bad = createDefaultState();
+    const today = todayUtc();
+    bad.daily[today] = {
+      kw: {
+        puzzleId: "kw-001",
+        score: 999, // invalid: > 100
+        revealedClues: 1,
+        wrongGuesses: [],
+        status: "solved",
+        updatedAt: "2026-07-09T10:00:00.000Z",
+      },
+    };
+
+    const result = saveState(bad);
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("invalid");
+
+    // The on-disk state must be untouched (no partial/poisoned write).
+    expect(adapter.getItem(STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe("saveState — soft-quota prune success (P2-28)", () => {
+  it("sheds oldest last30Days entries to get under quota and returns ok:true", () => {
+    const adapter = createMemoryAdapter();
+    __setAdapterForTesting(adapter);
+
+    const state = createDefaultState();
+    // Fill last30Days with 20 entries within the 30-day retention window so
+    // the prune loop has payload to shed.
+    for (let i = 1; i <= 20; i++) {
+      state.stats.last30Days[daysAgo(i)] = 100;
+    }
+    // Bloat completedPuzzleIds (not pruned by the loop, only de-duplicated)
+    // until the serialized size is JUST over the soft quota. The overflow is
+    // ~one ID (~14 bytes), far smaller than the last30Days payload, so
+    // shedding a few entries brings it back under.
+    let counter = 0;
+    while (estimateSize(state) <= SOFT_QUOTA_BYTES) {
+      state.completedPuzzleIds.push(`cp-${String(counter++).padStart(5, "0")}`);
+    }
+    expect(estimateSize(state)).toBeGreaterThan(SOFT_QUOTA_BYTES);
+
+    const result = saveState(state);
+    expect(result.ok).toBe(true);
+
+    // The prune loop dropped at least one last30Days entry to fit.
+    const loaded = loadState();
+    expect(Object.keys(loaded.stats.last30Days).length).toBeLessThan(20);
+  });
+});
+
+describe("saveState — clears :corrupted on success (P2-7)", () => {
+  it("removes a previously stashed :corrupted payload after a healthy write", () => {
+    const adapter = createMemoryAdapter();
+    __setAdapterForTesting(adapter);
+    // Simulate a prior corrupted load that stashed the raw payload.
+    adapter.setItem(STORAGE_KEY + ":corrupted", "{ broken");
+    expect(adapter.getItem(STORAGE_KEY + ":corrupted")).not.toBeNull();
+
+    const result = saveState(createDefaultState());
+    expect(result.ok).toBe(true);
+    expect(adapter.getItem(STORAGE_KEY + ":corrupted")).toBeNull();
+  });
 });
 
 describe("estimateSize", () => {
@@ -263,16 +353,18 @@ describe("estimateSize", () => {
     expect(estimateSize()).toBe(0);
   });
 
-  it("returns the on-disk size after a save", () => {
+  it("returns the on-disk size after a save (P2-29: exact, not >0)", () => {
+    const adapter = createMemoryAdapter();
+    __setAdapterForTesting(adapter);
     const state = createDefaultState();
     state.completedPuzzleIds = ["kw-001", "em-001"];
     saveState(state);
 
-    const raw = createMemoryAdapter();
-    // Read from the injected adapter (same one used by saveState).
-    const size = estimateSize();
-    expect(size).toBeGreaterThan(0);
-    void raw; // silence unused
+    // estimateSize() with no arg reads the raw on-disk string; its length must
+    // equal the raw string length exactly (previously a weak `>0` assertion).
+    const raw = adapter.getItem(STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    expect(estimateSize()).toBe(raw!.length);
   });
 });
 

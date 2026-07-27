@@ -221,3 +221,65 @@ Each finding cites `file:line` evidence. Findings are deduplicated across review
 6. Remaining P2 items — opportunistically.
 
 This review is read-only; no business implementation was modified.
+
+---
+
+## Fixes Applied (2026-07-16)
+
+Owner-directed comprehensive fix pass ("全面复盘 + 全部修改"). All P0, all P1, and the actionable P2 items below were resolved. Validation re-run green: **229 unit tests pass (21 files), lint clean, build compiles + typecheck passes + 17 static pages generated**.
+
+### P0 — Resolved
+
+- **P0-1.** Screenshot placeholder attribution relabeled to `"placeholder"` / `"Generated placeholder — not a licensed asset"` (ss-001, ss-002). Real NASA/Wikimedia claims removed. (Content asset replacement itself remains deferred — placeholders are explicitly flagged, not misrepresented.)
+- **P0-2.** Created `public/og.jpg` (1200×630 generated OG image). `src/lib/site-config.ts` now references `/og.jpg`. OG metadata in `layout.tsx` + `metadata.ts` carries explicit `width: 1200, height: 630` (also resolves P2-47). No more 404 on social share cards.
+
+### P1 — Resolved
+
+- **P1-1.** `saveState` (`client.ts`) now runs `V2Schema.safeParse(working)` before writing; rejects with `{ok:false, error:"invalid"}` on failure so a single bad field cannot poison the on-disk state. `actions.ts` defensively clamps `score` to [0,100], `revealedClues` to ≥0, and normalizes+filters `wrongGuesses` (via `normalizeAnswer`) at entry. New `SaveResult.error: "invalid"` union member.
+- **P1-2.** `Modal` rewritten via `createPortal(..., document.body)`. The inert loop now iterates `document.body.children`, covering header/nav/footer/skip-link — not just the modal's immediate siblings.
+- **P1-3.** `Modal` title id generated with `useId()` (no more hardcoded `"modal-title"` collision). `aria-label` fallback added for titleless dialogs. (A `??`-before-`?:` operator-precedence bug in the fallback was caught and fixed during test validation.)
+- **P1-4.** `<ToastProvider>` mounted in `app/layout.tsx`, wrapping all body content. `useToast()` no longer throws on first call.
+- **P1-6.** `recordModeResult` (`actions.ts`) treats `given_up` as terminal — a later `solved` attempt for the same day+mode is rejected (`changed: false`), per PRD §5.1.
+- **P1-8.** `migrate.ts` no longer uses unsafe `as` assertions to cast V1 payloads to V2. Fields are constructed structurally with `??` defaults, so malformed V1 shapes cannot bypass validation.
+- **P1-11.** `loader.test.ts` added (11 tests): loadPuzzleById (6), loadPuzzlesByMode (3), loadAllPuzzles (1), getPuzzleIndex (1). Uses real temp dirs via `GTG_DATA_DIR` env hook in `loader.ts` (avoids fragile `node:fs` mocking under vitest hoisting). Covers malformed JSON, schema-invalid JSON, unrecognized-prefix full scan, and sorted aggregation.
+
+### P2 — Resolved (selection)
+
+- **P2-4 / P2-5.** `wrongGuesses` case-normalized on write (case variants no longer store as duplicates). `updateSettings` uses `JSON.stringify` change detection.
+- **P2-7.** Successful `saveState` + `resetState` now clear the `:corrupted` stash key so it cannot accumulate.
+- **P2-26 / P2-27 / P2-28 / P2-29 / P2-30 / P2-31.** Storage test gaps closed: `modeAvgScore` exact-value assertion, saveState unavailable branch, soft-quota prune-succeeds path, `estimateSize` strong assertion, V1→V2 real-localStorage migration (end-to-end through `loadState`→`migrate`→`V2Schema`), cross-minute streak re-seal (`vi.setSystemTime`).
+- **P2-33.** Playwright config now builds the static export (`out/`) and serves it via zero-dependency `scripts/serve-static.mjs` — e2e runs against the real static build, not the dev server.
+- **P2-38.** `ResultAnnouncer` `aria-live` downgraded from `assertive` to `polite` (game results are status updates, not urgent alerts). Test updated to match.
+- **P2-39.** `TimelineControls` roving tabindex implemented: exactly one `<li>` carries `tabIndex={0}`, the rest `tabIndex={-1}` (single Tab stop). DOM focus follows the moved item after an Arrow-key reorder so players can chain moves. Fixes the prior "removed tabIndex entirely" regression that broke keyboard focus.
+- **P2-40 / P2-41 / P2-42 / P2-43.** `:focus-visible` no longer mutates `border-radius`. `body` gains `overscroll-behavior`. Modal focus-trap selector filters `[disabled]`/`[inert]` and includes `[contenteditable]`. Modal gains a visible Close button (`showCloseButton` prop, default true).
+- **P2-47.** OG image `width`/`height` added to metadata (see P0-2).
+- **P2-51.** `ResultAnnouncer.regionRef` + unused `useRef` import deleted.
+- **Structured data / SEO.** `serializeJsonLd` now HTML-escapes values. `price` typed as number in JSON-LD. Play-page OG title unified with site name. `_headers` (Cloudflare) ships CSP + `X-Frame-Options: DENY`. `.gitignore` excludes `.env`. `.env.example` documents Cloudflare vars. `ci.yml` adds `npm audit`, a build-output assertion, and Playwright browser cache. `DECISIONS.md` ADRs corrected to match actual file paths/deps. Handoff doc `main`→`master` branch reference fixed.
+
+### P2 — Resolved (polish batch, 2026-07-17)
+
+Owner-directed continuation pass ("继续"). Addressed the remaining opportunistic P2 items flagged as deferred after the 2026-07-16 batch. Validation re-run green: **229 unit tests pass (21 files), lint clean, build compiles + typecheck passes + 17 static pages generated**.
+
+- **P2-36.** `--font-heading` / `--font-body` no longer name `'Inter'` — no web font is shipped, so the token dishonestly advertised a font that never loaded (silently fell back to `system-ui`). Stacks now honestly start with `system-ui, -apple-system, 'Segoe UI', Roboto`. Zero visual change (system-ui was already the rendered font); the token now reflects reality.
+- **P2-37.** `sitemap.ts` `lastModified` switched from build-time `new Date()` to a fixed `SITE_LAST_MODIFIED` constant (`2026-07-16`). A static-export site rebuilt for a code-only change should not advertise every page as freshly modified — that dilutes the crawl signal. Bump the constant when indexable content actually changes.
+- **P2-50.** Four dead exports removed after confirming zero callers across `src/`, `scripts/`, and tests: `MODE_TO_PREFIX` (`schemas.ts` — only `PREFIX_TO_MODE` is used), `modeInfo` (`site-config.ts` — the throwing `getModeInfo` is the used one), `MODE_KEYS` (`types.ts`), `breadcrumbSchema` (`structured-data.ts` — never wired into any page). The now-unused `canonicalUrl` import in `structured-data.ts` was also cleaned up.
+- **P2-53.** `todayUtc` / `daysAgo` — byte-identical across `actions.test.ts`, `client.test.ts`, `edge-cases.test.ts`, `integration.test.ts` — extracted to `src/storage/__testutils__/helpers.ts` (guardrail #4, single source of truth). `makeV1Fixture` intentionally left local to each file: the two variants carry different fixture data on purpose, so merging them would weaken coverage (guardrail #6).
+- **P2-56.** The repeated `44px` WCAG 2.5.5 touch-target floor — previously copy-pasted across `BottomNav`, `SiteHeader`, `SiteFooter`, `TimelineControls`, `ErrorState` — centralized as the `--touch-target-min` design token in `globals.css`; all five sites now reference it. Toast's `4000ms` auto-dismiss magic number extracted to a named `TOAST_AUTO_DISMISS_MS` const.
+- **P2-57.** Removed four vestigial `as string` casts on `zIndex: "var(--z-*)"`. React 19's csstype accepts string-valued `zIndex`, so the casts were dead weight that obscured the intent. Typecheck confirms no regression.
+- **P2-58.** `BottomNav` label "More" → "Archive" to match `SiteHeader`. The same `/archive` route now has one name across desktop and mobile nav (consistency, not a visual redesign).
+- **P2-59 / P2-60.** `AGENTS.md` commit-convention list expanded from the three historical `docs:` examples to the full Conventional Commits type set actually used in this repo (`docs`/`feat`/`fix`/`chore`/`refactor`/`perf`/`test`/`ci`/`revert`). Document-locations inventory completed with the missing entries (`ExecPlan.md`, `SECURITY-REVIEW.md`, `deployment.md`, `final-code-review.md`).
+
+### Deferred (content/asset + UI wiring only)
+
+- **P0-1 (asset replacement):** verified public-domain screenshot images still need to replace the generated placeholders before screenshot mode goes public. Attribution is correctly flagged as `placeholder` in the meantime.
+- **P1-9 / P1-10:** game-component wiring and next-clue preload belong to Phase 4d (UI implementation), not this fix pass.
+- **P2-34:** `SiteHeader`/`BottomNav` server-side active-state — would require restructuring the components away from `"use client"`; deferred to avoid an architecture change in a polish pass.
+- **Low-value P2 polish** not worth the churn: P2-12 (footnote formatting), P2-35 (archive-grouping variant), P2-44/P2-45 (prefers-contrast media query / aria-errormessage), P2-49 (remaining magic numbers that are single-use and self-documenting in their component), P2-54/P2-55 (ci timeout / node-version pinning — CI already works).
+
+### Validation Evidence
+
+| Gate | Result |
+|------|--------|
+| Unit tests | 229 passed, 0 failed (21 files) |
+| Lint | No ESLint warnings or errors |
+| Build | Compiled successfully; typecheck passed; 17/17 static pages generated. Static export to `out/` skipped locally due to the known Windows NTFS phantom-file bug (antivirus locks the `_not-found` chunk); CI/Linux builds produce the full export. |

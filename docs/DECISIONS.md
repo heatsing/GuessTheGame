@@ -67,7 +67,7 @@ Use **Next.js App Router with `output: 'export'`** as the framework.
 
 ### Consequences
 
-- **Positive**: One framework, one mental model, full React/TypeScript ecosystem, mature static export, excellent Vercel/Cloudflare deployment story.
+- **Positive**: One framework, one mental model, full React/TypeScript ecosystem, mature static export, excellent Cloudflare Pages static deployment story.
 - **Positive**: `generateStaticParams` + RSC give us build-time data inlining with zero client fetch on first paint.
 - **Negative**: `next/image` optimization is disabled (must use `unoptimized: true`); we handle image optimization ourselves (see ADR-007).
 - **Negative**: No API routes, no ISR, no middleware. All runtime logic is client-side. This is acceptable per PRD §4.2 but constrains future features until a backend is introduced (see ADR-008).
@@ -92,17 +92,17 @@ The product also has a **data layer** (puzzle JSON, schedules, indices) that cha
 
 ### Decision
 
-Enforce a **strict three-layer module separation** with physical folder boundaries and ESLint import rules:
+Enforce a **strict three-layer module separation** with folder boundaries. Physical folder boundaries are in place; the ESLint import-rule enforcement described below is planned, not yet implemented.
 
-- `src/engine/` — pure game logic. **No React, no Next, no DOM imports.** Pure functions, isomorphic (runs in Node and browser). Unit-tested in pure Node (no jsdom).
-- `src/data/` — content (JSON) + schemas + validation. **No React, no Next imports.** Auditable by standalone scripts.
-- `src/ui/` — React components, pages, hooks. May import from `engine/` and `data/`.
+- `src/lib/game/` — pure game logic (e.g., `match.ts`). **No React, no Next, no DOM imports.** Pure functions, isomorphic (runs in Node and browser). Unit-tested in pure Node (no jsdom).
+- `src/lib/content/` — content schemas + loaders (e.g., `schemas.ts`, `loader.ts`). **No React, no Next imports.** Auditable by standalone scripts.
+- `src/app/` + `src/components/` — React components, pages, hooks. May import from `lib/game/` and `lib/content/`.
 
-A fourth module, `src/storage/` (localStorage wrapper + migrations), sits between engine and UI; it may import engine types but not React/Next.
+A fourth module, `src/storage/` (localStorage wrapper + migrations, e.g., `client.ts`, `actions.ts`, `adapter.ts`), sits between engine and UI; it may import engine types but not React/Next.
 
-Import rules are enforced by `eslint-plugin-import` and `no-restricted-imports`:
-- `engine/` and `data/` cannot import `react`, `next`, or DOM globals.
-- CI runs engine unit tests in pure Node to prove no DOM coupling.
+Import-rule enforcement via `eslint-plugin-import` and `no-restricted-imports` is **planned, not yet implemented**. The current ESLint config (`eslint.config.mjs`) only extends `next/core-web-vitals` and `next/typescript`, plus a single rule `@typescript-eslint/no-explicit-any: warn`. The three-layer separation is currently maintained by convention and folder structure; tightening it to a CI-enforced lint rule is deferred to a later phase.
+- Planned: `lib/game/` and `lib/content/` cannot import `react`, `next`, or DOM globals.
+- Planned: CI runs engine unit tests in pure Node to prove no DOM coupling.
 
 ### Alternatives considered
 
@@ -201,7 +201,9 @@ The PRD's mention of `data/daily-schedule.json` leans toward option 2, but the d
 
 **Pre-generate the daily schedule at build time** as `data/daily-schedule.json`, covering 365 days from the build date. The client does a simple `schedule[utcDateString]` lookup at runtime.
 
-- The generation script (`scripts/gen-schedule.ts`) uses a deterministic hash of the UTC date string per mode, applies a cross-mode diversity constraint (at least 3 distinct domains per day, per PRD §5.1), and writes the schedule.
+**Implementation: pending (Phase 4d+).** The schedule file (`data/daily-schedule.json`) and the generation script (`scripts/gen-schedule.ts`) are not yet implemented; the daily-puzzle selection will be inlined into the build-time schedule generation when Phase 4d lands. The design below describes the intended behavior:
+
+- The generation script (`scripts/gen-schedule.ts`, planned) uses a deterministic hash of the UTC date string per mode, applies a cross-mode diversity constraint (at least 3 distinct domains per day, per PRD §5.1), and writes the schedule.
 - The script is append-friendly: extending the schedule starts from the last date + 1, preserving past entries (which must never change — archive replay depends on immutability).
 - CI checks the schedule's expiry date and fails the build if it's < 30 days away (PRD R6 mitigation).
 
@@ -303,9 +305,11 @@ The product has no runtime backend (PRD §1, §4.2). The puzzle corpus is small 
 
 Use a **pre-built client-side search index** shipped as a static JSON file (`data/search-index.json`), queried in the browser with **`fuse.js`** for fuzzy matching.
 
+**Implementation: planned, not yet implemented.** `fuse.js` is not currently declared in `package.json`, and the index-generation script (`scripts/gen-search-index.ts`) does not yet exist. The design below describes the intended behavior once the browse/archive search feature is implemented:
+
 - The index is a flat array of entries: `{ id, mode, domain, text, url }` where `text` is a pre-tokenized concatenation of searchable fields (target + aliases + keywords/emojis + domain), lowercased at build time.
 - The index is ~5–15KB for 200 puzzles, loaded lazily only on the browse/archive pages.
-- `fuse.js` (~6KB gzipped) is initialized with the index on first search; results return in < 10ms for 200 entries.
+- `fuse.js` (~6KB gzipped, planned dependency) is initialized with the index on first search; results return in < 10ms for 200 entries.
 
 ### Alternatives considered
 
@@ -330,7 +334,7 @@ Use a **pre-built client-side search index** shipped as a static JSON file (`dat
 - **Positive**: Index is generated from the same puzzle JSON as everything else — single source of truth.
 - **Negative**: Index size grows linearly with puzzle count. At 200 puzzles it's ~15KB; at 2000 it would be ~150KB. If the corpus grows past ~1000 puzzles, revisit (either switch to a self-built inverted index for sublinear lookup, or paginate the index). The 365-day schedule and content batching strategy make explosive growth unlikely in the near term.
 - **Negative**: `fuse.js` is a ~6KB gzipped dependency. Acceptable for the UX value; revisit only if bundle size becomes a problem (PRD AC-43 Lighthouse threshold).
-- **Negative**: Search index must be regenerated when puzzles are added. Automated in the build pipeline (`scripts/gen-search-index.ts` runs if the source indices changed).
+- **Negative**: Search index must be regenerated when puzzles are added. Automated in the build pipeline (planned: `scripts/gen-search-index.ts` runs if the source indices changed) — not yet implemented.
 
 ---
 
@@ -351,7 +355,7 @@ Screenshot mode (PRD §5.4) and OG share images (PRD D5) require raster images. 
 
 ### Decision
 
-Use **WebP** as the sole raster image format for all puzzle images, produced at build time by a processing script (`scripts/process-images.ts`).
+Use **WebP** as the sole raster image format for all puzzle images, produced at build time by a processing script (`scripts/process-images.ts` — **planned, not yet implemented**).
 
 - Photos: WebP at quality ~78, target size 800×600, ~30–60KB per image.
 - Silhouettes: WebP with alpha, or PNG for tiny (< 5KB) sharp-edge cases where WebP's lossy compression artifacts are visible.
@@ -383,7 +387,7 @@ Use **WebP** as the sole raster image format for all puzzle images, produced at 
 - **Positive**: 25–35% smaller payloads than JPEG; alpha support for silhouettes; universal modern browser support; single format simplifies the pipeline and schema.
 - **Positive**: Per-image size cap (80KB) keeps total image budget bounded and predictable for Lighthouse (PRD AC-43).
 - **Negative**: Sub-1% of browsers (very old Safari, IE) won't render WebP. Mitigated by the `<img>` `onError` placeholder fallback (see `architecture.md` §12) — the game remains playable (the player can still guess from keywords/facts).
-- **Negative**: WebP encoding adds a build step (the processing script). This is a one-time setup cost; the script runs in CI and is fast.
+- **Negative**: WebP encoding adds a build step (the processing script — planned, not yet implemented). This is a one-time setup cost; the script will run in CI and is fast.
 - **Negative**: If the content team sources a format WebP can't losslessly preserve (rare), the script converts anyway with minor quality loss. Acceptable for a guessing game where images are functional, not artistic showcases.
 
 ---

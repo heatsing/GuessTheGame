@@ -47,9 +47,15 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* Typography */
-  --font-heading: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Typography
+     -------------------------------------------------------------------------
+     System-font stack only — no web font is shipped, so naming 'Inter' here was
+     misleading (it never loaded and silently fell back to system-ui). The
+     tokens now honestly reflect the rendered system font (review P2-36). If a
+     brand font is added later via next/font, re-add it to the front of the
+     stack and wire up the font file. */
+  --font-heading: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
 
   --font-size-xs: 12px;
@@ -100,6 +106,13 @@
   --z-modal: 400;
   --z-toast: 500;
 
+  /* Layout sizing
+     -------------------------------------------------------------------------
+     Touch targets meet the WCAG 2.5.5 44×44 minimum. Referenced by every
+     clickable surface (nav, modal close, timeline buttons, error retry) so the
+     floor lives in one place (review P2-56). */
+  --touch-target-min: 44px;
+
   color-scheme: dark;
 }
 
@@ -133,6 +146,7 @@ body {
   color: var(--color-text);
   line-height: var(--line-height-base);
   min-height: 100dvh;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -166,7 +180,6 @@ img {
 :focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 /* =============================================================================

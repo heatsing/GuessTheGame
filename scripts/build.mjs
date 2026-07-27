@@ -14,7 +14,7 @@
  * produces a non-export build (`.next/` only, no `out/`). This allows local
  * type-checking, linting, and build verification to pass on Windows.
  *
- * CI/Vercel (Linux) builds are unaffected — the first `next build` succeeds.
+ * CI/Cloudflare (Linux) builds are unaffected — the first `next build` succeeds.
  */
 import { execSync } from "node:child_process";
 import { rmSync, existsSync, readdirSync, readFileSync } from "node:fs";
@@ -98,7 +98,7 @@ try {
     try {
       runBuild({ GTG_SKIP_EXPORT: "true" });
       console.log("\n[build] Non-export build completed (local verification mode).");
-      console.log("[build] Production static export will run correctly on Vercel/CI.");
+      console.log("[build] Production static export will run correctly on Cloudflare/CI.");
     } catch (retryError) {
       console.error("\n[build] Build failed even without export. See error above.");
       process.exitCode = 1;

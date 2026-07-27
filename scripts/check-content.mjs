@@ -30,11 +30,19 @@ if (v.failed.length > 0) {
 const a = checkAssets();
 console.log("");
 console.log("=== 2/3 Asset check ===");
-console.log(`Referenced ${a.checked}, missing ${a.missing.length}`);
+console.log(`Referenced ${a.checked}, missing ${a.missing.length}, oversized ${a.oversized.length}`);
 if (a.missing.length > 0) {
   problems += a.missing.length;
   for (const m of a.missing) {
     console.log(`  FAIL ${m.id} -> ${m.image}`);
+  }
+}
+if (a.oversized.length > 0) {
+  problems += a.oversized.length;
+  for (const o of a.oversized) {
+    console.log(
+      `  FAIL ${o.id} ${o.kind} ${o.path}: ${o.sizeKB} KB exceeds ${o.capKB} KB cap`
+    );
   }
 }
 

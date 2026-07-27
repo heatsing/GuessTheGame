@@ -15,6 +15,9 @@ export interface GameImageProps {
   priority?: boolean;
   /** Optional thumbnail/preview src shown before the full image loads. */
   blurSrc?: string;
+  /** Optional CSS blur radius in px applied via `filter: blur()`. Used by the
+   *  Screenshot game to render blur tiers (level 3 → 0). 0/undefined = sharp. */
+  blurPx?: number;
   /** Called when the image fails to load, so the game can show a fallback. */
   onError?: () => void;
   className?: string;
@@ -37,6 +40,7 @@ export function GameImage({
   height,
   priority = false,
   blurSrc,
+  blurPx,
   onError,
   className,
 }: GameImageProps) {
@@ -61,6 +65,7 @@ export function GameImage({
           fontSize: "var(--font-size-sm)",
           padding: "var(--space-2)",
           textAlign: "center",
+          filter: blurPx ? `blur(${blurPx}px)` : undefined,
         }}
       >
         Image unavailable
@@ -87,6 +92,7 @@ export function GameImage({
         backgroundImage: blurSrc ? `url(${blurSrc})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
+        filter: blurPx ? `blur(${blurPx}px)` : undefined,
       }}
       onError={() => {
         setFailed(true);

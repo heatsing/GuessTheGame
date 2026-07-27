@@ -9,6 +9,7 @@ import {
 import { createDefaultState } from "./defaults";
 import { getDefaultAdapter } from "./adapter";
 import { migrate } from "./migrate";
+import { V2Schema } from "./types";
 import { dedupe, dedupeAndCap, subtractDays } from "./internal";
 import type { DailyProgress, PersistedState } from "./types";
 
@@ -123,13 +124,17 @@ export function loadState(): PersistedState {
 }
 
 /**
- * Result of a save attempt. `ok: false` with `error: "quota"` indicates the
- * write was rejected due to capacity limits (soft quota exceeded even after
- * pruning, or the browser threw `QuotaExceededError`).
+ * Result of a save attempt.
+ *  - `ok: false` + `error: "quota"` — soft quota exceeded even after pruning,
+ *    or the browser threw `QuotaExceededError`.
+ *  - `ok: false` + `error: "unavailable"` — storage adapter is not available.
+ *  - `ok: false` + `error: "invalid"` — the state failed schema validation at
+ *    write time; the write is rejected so a bad field cannot poison the
+ *    on-disk state (which would cause `loadState` to discard ALL progress).
  */
 export interface SaveResult {
   ok: boolean;
-  error?: "quota" | "unavailable";
+  error?: "quota" | "unavailable" | "invalid";
 }
 
 /**
@@ -169,6 +174,21 @@ export function saveState(state: PersistedState): SaveResult {
     completedPuzzleIds: dedupe(state.completedPuzzleIds),
   };
 
+  // Write-time validation (P1-1): reject the write if the normalized state
+  // does not conform to V2Schema. Without this, a single out-of-range field
+  // (score > 100, non-zero-padded date, empty wrong-guess) would be persisted,
+  // and the next `loadState` would discard ALL progress via the migrate
+  // safeParse fallback. Failing fast here keeps the on-disk state intact.
+  const validation = V2Schema.safeParse(working);
+  if (!validation.success) {
+    console.warn(
+      "[gtg:storage] saveState rejected: state failed V2 schema validation.",
+      validation.error.issues,
+    );
+    return { ok: false, error: "invalid" };
+  }
+  working = validation.data;
+
   let size = JSON.stringify(working).length;
 
   // Soft quota: shed oldest last30Days entries until under the cap.
@@ -193,6 +213,13 @@ export function saveState(state: PersistedState): SaveResult {
 
   try {
     adapter.setItem(STORAGE_KEY, JSON.stringify(working));
+    // A successful write means the on-disk state is healthy — clear any
+    // previously stashed corrupted payload so it cannot accumulate (P2-7).
+    try {
+      adapter.removeItem(CORRUPTED_KEY);
+    } catch {
+      // Best-effort; ignore.
+    }
     return { ok: true };
   } catch (err) {
     // QuotaExceededError or any other setItem failure — report as quota.
@@ -203,13 +230,15 @@ export function saveState(state: PersistedState): SaveResult {
 
 /**
  * Removes the persisted state entirely. Only called from explicit "clear my
- * data" UI — never automatically. SSR-safe.
+ * data" UI — never automatically. Also clears any stashed `:corrupted`
+ * payload so a reset is a true clean slate (P2-7). SSR-safe.
  */
 export function resetState(): void {
   if (typeof window === "undefined") return;
   const adapter = getDefaultAdapter();
   try {
     adapter.removeItem(STORAGE_KEY);
+    adapter.removeItem(CORRUPTED_KEY);
   } catch {
     // Best-effort.
   }

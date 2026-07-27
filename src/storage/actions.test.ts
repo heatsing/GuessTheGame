@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { __setAdapterForTesting, createMemoryAdapter } from "./adapter";
 import {
@@ -15,23 +15,12 @@ import { loadState, saveState } from "./client";
 import { createDefaultState } from "./defaults";
 import { RECENT_PUZZLES_CAP } from "./keys";
 import type { PersistedState } from "./types";
+import { daysAgo, todayUtc } from "./__testutils__/helpers";
 
 /**
  * Domain-action unit tests. Every test starts with a fresh memory adapter
  * so there is no cross-test state leakage.
  */
-
-// --- Date helpers --------------------------------------------------------
-
-function todayUtc(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function daysAgo(n: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
-}
 
 // --- Setup ---------------------------------------------------------------
 
@@ -170,6 +159,100 @@ describe("recordModeResult — no downgrade from solved to given_up", () => {
   });
 });
 
+describe("recordModeResult — given_up is terminal (P1-6)", () => {
+  it("does NOT overwrite a given_up record with a later solved attempt for the same day+mode", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 0,
+      revealedClues: 6,
+      wrongGuesses: ["x"],
+      status: "given_up",
+    });
+
+    const second = recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 100,
+      revealedClues: 0,
+      wrongGuesses: [],
+      status: "solved",
+    });
+
+    // Per PRD §5.1 the result is locked once given_up; a later solve is rejected.
+    expect(second.changed).toBe(false);
+    expect(second.state.daily[today]?.kw?.status).toBe("given_up");
+    expect(second.state.daily[today]?.kw?.score).toBe(0);
+  });
+});
+
+describe("recordModeResult — defensive normalization (P1-1)", () => {
+  it("clamps an out-of-range score into [0, 100] before persisting", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 250, // over max
+      revealedClues: 2,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.daily[today]?.kw?.score).toBe(100);
+  });
+
+  it("clamps a negative score to 0", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: -50,
+      revealedClues: -3, // also negative
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.daily[today]?.kw?.score).toBe(0);
+    expect(loaded.daily[today]?.kw?.revealedClues).toBe(0);
+  });
+
+  it("normalizes wrongGuesses case so case variants do not store as duplicates (P2-4)", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: ["Volcano", "VOLCANO", "volcano", "  Mountain  "],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.daily[today]?.kw?.wrongGuesses).toEqual(["volcano", "mountain"]);
+  });
+});
+
+describe("recordModeResult — modeAvgScore value (P2-26)", () => {
+  it("computes the mean of solved scores for a mode across days, exactly", () => {
+    const dayA = daysAgo(1);
+    const dayB = todayUtc();
+    recordModeResult(dayA, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    recordModeResult(dayB, "keywords", {
+      puzzleId: "kw-002",
+      score: 60,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+
+    const loaded = loadState();
+    // Two solved attempts (80, 60) → mean 70. Assert the exact value, not just
+    // that the field exists (the previous blind spot).
+    expect(loaded.stats.modeAvgScore.keywords).toBe(70);
+  });
+});
+
 describe("recordModeResult — recent + completed puzzle lists", () => {
   it("prepends puzzleId to recentPuzzleIds (deduped, capped)", () => {
     const today = todayUtc();
@@ -261,6 +344,130 @@ describe("recordModeResult — recent + completed puzzle lists", () => {
     });
     const loaded = loadState();
     expect(loaded.completedPuzzleIds).not.toContain("kw-001");
+  });
+});
+
+// --- recordModeResult — streak recalculation (slice 4d-8) -----------------
+
+describe("recordModeResult — streak update", () => {
+  it("starts a streak from 1 on the first completed puzzle (PRD §7.3)", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.streak.current).toBe(1);
+    expect(loaded.streak.max).toBe(1);
+    expect(loaded.streak.lastActiveDate).toBe(today);
+  });
+
+  it("is idempotent for same-day completions (streak stays 1)", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    // Second mode, same day — streak should NOT bump to 2.
+    recordModeResult(today, "emoji", {
+      puzzleId: "em-001",
+      score: 70,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.streak.current).toBe(1);
+    expect(loaded.streak.lastActiveDate).toBe(today);
+  });
+
+  it("increments the streak when the previous activity was yesterday", () => {
+    const yesterday = daysAgo(1);
+    const today = todayUtc();
+    // Seed yesterday's activity.
+    recordModeResult(yesterday, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    expect(loadState().streak.current).toBe(1);
+
+    // Today's completion → streak 2.
+    recordModeResult(today, "emoji", {
+      puzzleId: "em-001",
+      score: 70,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.streak.current).toBe(2);
+    expect(loaded.streak.max).toBe(2);
+    expect(loaded.streak.lastActiveDate).toBe(today);
+  });
+
+  it("resets the streak to 1 when a day was skipped", () => {
+    const twoDaysAgo = daysAgo(2);
+    const today = todayUtc();
+    recordModeResult(twoDaysAgo, "keywords", {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    expect(loadState().streak.current).toBe(1);
+
+    // Skip yesterday; complete today → broken streak, reset to 1.
+    recordModeResult(today, "emoji", {
+      puzzleId: "em-001",
+      score: 70,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved",
+    });
+    const loaded = loadState();
+    expect(loaded.streak.current).toBe(1);
+    expect(loaded.streak.max).toBe(1); // max also resets since the old streak is gone
+    expect(loaded.streak.lastActiveDate).toBe(today);
+  });
+
+  it("does NOT update the streak for an in_progress record", () => {
+    const today = todayUtc();
+    recordModeResult(today, "keywords", {
+      puzzleId: "kw-001",
+      score: 0,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "in_progress",
+    });
+    const loaded = loadState();
+    expect(loaded.streak.current).toBe(0);
+    expect(loaded.streak.lastActiveDate).toBeNull();
+  });
+
+  it("does NOT bump the streak on a duplicate (idempotent no-op) result", () => {
+    const today = todayUtc();
+    const payload = {
+      puzzleId: "kw-001",
+      score: 80,
+      revealedClues: 1,
+      wrongGuesses: [],
+      status: "solved" as const,
+    };
+    recordModeResult(today, "keywords", payload);
+    // Identical repeat → changed:false, no new streak side effect.
+    const second = recordModeResult(today, "keywords", payload);
+    expect(second.changed).toBe(false);
+    expect(loadState().streak.current).toBe(1);
   });
 });
 
@@ -375,6 +582,29 @@ describe("completeDailyChallenge", () => {
     completeDailyChallenge(today);
     const second = completeDailyChallenge(today);
     expect(second.changed).toBe(false);
+  });
+
+  it("re-stamps when called again in a later minute (P2-31)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-16T10:00:30.000Z"));
+    const today = todayUtc();
+    const first = completeDailyChallenge(today);
+    expect(first.changed).toBe(true);
+    const firstStamp = loadState().daily[today]?.completedAt;
+
+    // Same minute — still idempotent.
+    vi.setSystemTime(new Date("2026-07-16T10:00:59.000Z"));
+    const sameMinute = completeDailyChallenge(today);
+    expect(sameMinute.changed).toBe(false);
+
+    // Next minute — the day is re-sealed with a fresh timestamp.
+    vi.setSystemTime(new Date("2026-07-16T10:01:05.000Z"));
+    const later = completeDailyChallenge(today);
+    expect(later.changed).toBe(true);
+    const laterStamp = loadState().daily[today]?.completedAt;
+    expect(laterStamp).not.toBe(firstStamp);
+
+    vi.useRealTimers();
   });
 });
 

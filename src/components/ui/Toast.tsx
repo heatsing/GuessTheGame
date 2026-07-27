@@ -16,6 +16,9 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+/** How long a toast stays on screen before auto-dismissing (review P2-56). */
+const TOAST_AUTO_DISMISS_MS = 4000;
+
 export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) throw new Error("useToast must be used within ToastProvider");
@@ -30,7 +33,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => [...prev, { id, message, variant }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, TOAST_AUTO_DISMISS_MS);
   }, []);
 
   return (
@@ -46,7 +49,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           bottom: "var(--space-12)",
           left: "50%",
           transform: "translateX(-50%)",
-          zIndex: "var(--z-toast)" as string,
+          zIndex: "var(--z-toast)",
           display: "flex",
           flexDirection: "column",
           gap: "var(--space-2)",

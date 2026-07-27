@@ -9,10 +9,12 @@ function badgeText(container: HTMLElement): string {
 }
 
 describe("ResultAnnouncer", () => {
-  it("renders an assertive aria-live region", () => {
+  it("renders a polite aria-live region (P2-38: non-urgent game results)", () => {
     const { container } = render(<ResultAnnouncer result={{ status: "idle" }} />);
     const region = container.querySelector("[aria-live]");
-    expect(region).toHaveAttribute("aria-live", "assertive");
+    // Polite, not assertive — game results are status updates, not urgent
+    // alerts; assertive would interrupt AT users mid-utterance (review P2-38).
+    expect(region).toHaveAttribute("aria-live", "polite");
     expect(region).toHaveAttribute("aria-atomic", "true");
   });
 

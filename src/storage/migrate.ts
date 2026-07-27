@@ -40,12 +40,16 @@ export const migrations: Record<number, (input: unknown) => unknown> = {
       return createDefaultState();
     }
     const v1 = input as Record<string, unknown>;
+    // Keep every field `unknown` through the migration chain (P1-8). The
+    // earlier `as PersistedState["…"]` assertions were type-level lies that
+    // skipped structural validation; we rely solely on the final
+    // `V2Schema.safeParse` (in `migrate`) to narrow the result. Defaults are
+    // only applied when a field is absent.
     return {
       schemaVersion: 2,
-      // Preserve existing data verbatim — lossless by default (§7).
-      daily: (v1["daily"] as PersistedState["daily"]) ?? {},
-      streak: (v1["streak"] as PersistedState["streak"]) ?? createDefaultStreak(),
-      stats: (v1["stats"] as PersistedState["stats"]) ?? createDefaultStats(),
+      daily: v1["daily"] ?? {},
+      streak: v1["streak"] ?? createDefaultStreak(),
+      stats: v1["stats"] ?? createDefaultStats(),
       // V1 settings was `{}`; upgrade to full defaults.
       settings: createDefaultSettings(),
       // V2 additions: initialize empty.

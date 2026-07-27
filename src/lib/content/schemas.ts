@@ -87,6 +87,13 @@ export const ScreenshotPuzzleSchema = GameEntrySchema.extend({
   mode: z.literal("screenshot"),
   /** Public path under /public, e.g. `/images/puzzles/ss-001.webp`. */
   image: z.string().min(1),
+  /**
+   * Optional LQIP (Low Quality Image Placeholder) thumbnail — a tiny (~1-3 KB)
+   * WebP shown as a CSS `background-image` behind the main `<img>` while the
+   * full image streams in (P1-10: "first clue image reasonably compressed").
+   * Path convention: `/images/puzzles/ss-001-blur.webp`.
+   */
+  blurSrc: z.string().min(1).optional(),
   imageLicense: z.string().min(1),
   imageAttribution: z.string().min(1),
 });
@@ -189,12 +196,4 @@ export const PREFIX_TO_MODE: Record<string, Mode> = {
   em: "emoji",
   ss: "screenshot",
   tl: "timeline",
-};
-
-/** Maps a mode to its expected ID prefix. */
-export const MODE_TO_PREFIX: Record<Mode, string> = {
-  keywords: "kw",
-  emoji: "em",
-  screenshot: "ss",
-  timeline: "tl",
 };

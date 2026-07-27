@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 
 const bottomNavItems = [
   { href: "/", label: "Home", icon: "⌂" },
+  { href: "/daily", label: "Daily", icon: "★" },
   { href: "/play/keywords", label: "Play", icon: "▶" },
   { href: "/stats", label: "Stats", icon: "▤" },
-  { href: "/archive", label: "More", icon: "≡" },
+  // Label matches SiteHeader ("Archive") so the same route has one name across
+  // the desktop and mobile nav (review P2-58).
+  { href: "/archive", label: "Archive", icon: "≡" },
 ];
 
 export function BottomNav() {
@@ -22,7 +25,7 @@ export function BottomNav() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: "var(--z-bottom-nav)" as string,
+        zIndex: "var(--z-bottom-nav)",
         backgroundColor: "var(--color-surface-elevated)",
         borderTop: "var(--border-default)",
         display: "flex",
@@ -46,8 +49,8 @@ export function BottomNav() {
               alignItems: "center",
               gap: "2px",
               padding: "var(--space-1) var(--space-2)",
-              minHeight: "44px",
-              minWidth: "44px",
+              minHeight: "var(--touch-target-min)",
+              minWidth: "var(--touch-target-min)",
               color: active
                 ? "var(--color-text)"
                 : "var(--color-text-muted)",

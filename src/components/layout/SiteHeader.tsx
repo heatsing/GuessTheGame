@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Home" },
+  { href: "/daily", label: "Daily" },
   { href: "/play/keywords", label: "Play" },
   { href: "/archive", label: "Archive" },
   { href: "/stats", label: "Stats" },
@@ -20,7 +21,7 @@ export function SiteHeader() {
       style={{
         position: "sticky",
         top: 0,
-        zIndex: "var(--z-sticky)" as string,
+        zIndex: "var(--z-sticky)",
         backgroundColor: "var(--color-surface-elevated)",
         borderBottom: "var(--border-default)",
         boxShadow: "var(--shadow-md)",
@@ -75,7 +76,7 @@ export function SiteHeader() {
                     : "var(--font-weight-regular)",
                   textDecoration: "none",
                   fontSize: "var(--font-size-sm)",
-                  minHeight: "44px",
+                  minHeight: "var(--touch-target-min)",
                   display: "flex",
                   alignItems: "center",
                 }}

@@ -51,6 +51,8 @@ export function buildPageMetadata({
         {
           url: absoluteUrl(SITE_CONFIG.ogImage),
           alt: SITE_CONFIG.name,
+          width: 1200,
+          height: 630,
         },
       ],
     },

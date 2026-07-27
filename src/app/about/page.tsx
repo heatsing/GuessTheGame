@@ -60,6 +60,17 @@ export default function AboutPage() {
           your streak, scores, and history live only in your browser via
           localStorage.
         </p>
+        <p
+          style={{
+            color: "var(--color-text-muted)",
+            lineHeight: "var(--line-height-relaxed)",
+          }}
+        >
+          Like all browser-only puzzle games, the answers are bundled into the
+          page itself — there is no server to hide them behind. The game runs on
+          an honor system: no leaderboards, no anti-cheat, and your progress is
+          yours alone.
+        </p>
       </section>
 
       <section style={{ marginBottom: "var(--space-8)" }}>
@@ -78,12 +89,11 @@ export default function AboutPage() {
           }}
         >
           Topics span geography, science, history, nature, and everyday
-          objects — chosen for broad public knowledge. Screenshot mode will
-          use public-domain images (such as from Wikimedia Commons and NASA),
-          original illustrations, and generated silhouettes. During
-          development, screenshot fixtures carry a `placeholder` license label
-          and a generated placeholder image; each image will carry attribution
-          metadata where its license requires it before the mode ships.
+          objects — chosen for broad public knowledge. Screenshot mode uses
+          public-domain images (such as from Wikimedia Commons and NASA),
+          original illustrations, and generated silhouettes. Each image
+          carries attribution metadata naming its source and license,
+          displayed beneath the puzzle.
         </p>
       </section>
 

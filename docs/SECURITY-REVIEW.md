@@ -16,7 +16,7 @@
 | Low | 4 |
 | Informational | 7 |
 
-No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. The single most important issue is **fabricated image attribution**: screenshot fixtures declared NASA provenance for files that are actually generated placeholders — this has now been corrected in-code by relabeling the fixtures as `imageLicense: "placeholder"` (see H-1). The remaining Medium items are launch-time hardening (Privacy/Contact pages, CSP + clickjacking protection, answer-exposure honesty note).
+No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. The previously most important issue — **fabricated image attribution** (H-1) — is now **fully resolved**: both screenshot fixtures have been replaced with verified public-domain NASA images sourced from Wikimedia Commons, with per-file attribution set to the real license metadata (see H-1). The remaining Medium items are launch-time hardening (Privacy/Contact pages, CSP + clickjacking protection, answer-exposure honesty note).
 
 ---
 
@@ -28,15 +28,20 @@ _None._
 
 ## High
 
-### H-1. Fabricated image attribution on screenshot placeholders — CORRECTED
+### H-1. Fabricated image attribution on screenshot placeholders — RESOLVED
 
 - **Location:** `src/data/screenshot/ss-001.json`, `src/data/screenshot/ss-002.json`; assets `public/images/puzzles/ss-001.webp`, `public/images/puzzles/ss-002.webp`
-- **Status:** **Corrected in-code this phase (2026-07-09).** Both fixtures now declare `"imageLicense": "placeholder"` and `"imageAttribution": "Generated placeholder — not a licensed asset. Replace with a verified IP-safe public-domain image before screenshot mode ships."` The false NASA provenance has been removed.
+- **Status:** **Fully resolved (2026-07-26).** Both placeholder `.webp` files have been replaced with verified public-domain NASA images sourced from Wikimedia Commons. Per-file license metadata confirmed via the Wikimedia API `extmetadata` endpoint (`LicenseShortName: "Public domain"`). JSON fixtures now declare the real `imageLicense: "public-domain"` and a factual `imageAttribution` string naming the NASA unit and Wikimedia source file.
+- **Resolution details:**
+  - **ss-001 (Mount Everest):** Image `Mount_Everest_ISS008-E-6150.JPG` — NASA ISS Expedition 8 Crew, via NASA Earth Observatory ("The Many Faces of Mount Everest" gallery). Wikimedia Commons confirms Public domain. Processed to 960×540 WebP (79.1 KB, ≤80 KB cap). Attribution: `"NASA ISS Expedition 8 Crew — The Many Faces of Mount Everest (NASA Earth Observatory). Source: Wikimedia Commons (Mount_Everest_ISS008-E-6150.JPG)."`
+  - **ss-002 (Sahara):** Image `Desert_Patterns_(5182689540).jpg` — NASA Goddard Space Flight Center, via Flickr. Wikimedia Commons confirms Public domain. Processed to 960×540 WebP (78.3 KB, ≤80 KB cap). Attribution: `"NASA Goddard Space Flight Center — Desert Patterns (via Flickr). Source: Wikimedia Commons (Desert_Patterns_(5182689540).jpg)."`
+  - **Blur thumbnails regenerated:** `ss-001-blur.webp` (0.1 KB), `ss-002-blur.webp` (0.1 KB) — both within the ≤5 KB LQIP cap.
+  - **Content validation:** `npm run content:check` passes — 8 puzzles valid, 0 missing assets, 0 oversized assets.
 - **Original evidence (preserved for traceability):**
-  - `ss-001.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA, via Wikimedia Commons"`.
-  - `ss-002.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA Earth Observatory"`.
-  - The actual `ss-001.webp` is a ~9.5 KB generated placeholder; `ss-002.webp` is ~9.1 KB — far too small to be real satellite photos.
-- **Remaining action before screenshot mode goes live:** replace the placeholder `.webp` files with genuinely licensed images (public-domain NASA/Wikimedia files, verified per-file) and set `imageAttribution`/`imageLicense` to the real per-file values, OR keep the `placeholder` label until then. A content-validation rule in `scripts/lib/validators.mjs` rejecting real-source names (NASA/Wikimedia/USGS) on placeholder-flagged assets is still recommended as a future guardrail.
+  - `ss-001.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA, via Wikimedia Commons"` for a ~9.5 KB generated placeholder.
+  - `ss-002.json` previously declared `"imageLicense": "public-domain"` and `"imageAttribution": "NASA Earth Observatory"` for a ~9.1 KB generated placeholder.
+  - Phase 4l (2026-07-09) relabeled both to `"imageLicense": "placeholder"` to remove the false claim. Phase 4d close-out (2026-07-26) replaced the placeholder pixels with the real public-domain images documented above.
+- **Future guardrail (still recommended):** a content-validation rule in `scripts/lib/validators.mjs` that rejects real-source names (NASA/Wikimedia/USGS) on assets still flagged `placeholder` would prevent the original misattribution from recurring if a future contributor adds a placeholder without updating the license field.
 
 ---
 
@@ -49,20 +54,26 @@ _None._
 - **Impact:** For a no-login, no-tracking static site the privacy risk is low, but a discoverable Privacy page is still expected (discloses localStorage data, retention windows, no-account model). More importantly, there is **no contact path for copyright inquiries/takedowns** — if a contributor accidentally adds a non-IP-safe asset, rights holders have no stated channel to report it.
 - **Recommended fix:** Add `/privacy` (data-in-browser disclosure, retention: daily 60d / last30 30d / recent 20, export & reset available, no accounts, no analytics) and `/contact` (or a `mailto:` / GitHub Issues link) linked from the footer. Reference AGENTS.md's IP-safe constraint.
 
-### M-2. Static answer exposure is an inherent, undisclosed limitation
+### M-2. Static answer exposure is an inherent, undisclosed limitation — RESOLVED
 
-- **Location:** `src/data/{keywords,emoji,screenshot,timeline}/*.json` (answers: `target` + `aliases`); loaded at build time via `src/lib/content/loader.ts`; bundled into the static export.
-- **Evidence:** All puzzle answers live in JSON that is either inlined into client JS bundles or fetchable as static assets. A determined user can read answers via View Source / DevTools / fetching the JSON. The About page states "Puzzle data is bundled at build time as JSON" (honest about architecture) but does not explicitly acknowledge that answers are therefore client-visible.
-- **Impact:** Not a vulnerability — this is the unavoidable tradeoff of a static, no-backend game (same as Wordle-style clones). The concern is *honesty*: the product should not imply answers are server-protected. Low real-world risk because the game is single-player and honor-system.
-- **Recommended fix:** Add a short note to `/how-to-play` or About acknowledging that, like all browser-only puzzle games, answers are present in the page bundle and the game runs on an honor system. No code change required; this is a copy/trust clarification.
+- **Location:** `src/data/{keywords,emoji,screenshot,timeline}/*.json` (answers: `target` + `aliases`); loaded at build time via `src/lib/content/loader.ts`; bundled into the static export. Disclosure added to `src/app/about/page.tsx`.
+- **Status:** **Resolved (2026-07-26).** The About page now includes an explicit honor-system paragraph: "Like all browser-only puzzle games, the answers are bundled into the page itself — there is no server to hide them behind. The game runs on an honor system: no leaderboards, no anti-cheat, and your progress is yours alone." This sits directly beneath the existing architecture disclosure ("Puzzle data is bundled at build time as JSON…").
+- **Evidence:** All puzzle answers live in JSON that is either inlined into client JS bundles or fetchable as static assets. A determined user can read answers via View Source / DevTools / fetching the JSON. This is now explicitly acknowledged to the player.
+- **Impact:** Not a vulnerability — this is the unavoidable tradeoff of a static, no-backend game (same as Wordle-style clones). The honesty concern is now addressed.
 
-### M-3. No Content-Security-Policy; no X-Frame-Options / frame-ancestors (clickjacking)
+### M-3. No Content-Security-Policy; no X-Frame-Options / frame-ancestors (clickjacking) — RESOLVED
 
 - **Location:** `public/_headers` (Cloudflare Pages headers, copied to `out/_headers` by static export); `next.config.mjs` (no `headers()`).
-- **Evidence:** `public/_headers` **does** configure four security headers — `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (incl. `interest-cohort=()`), and `Strict-Transport-Security` (HSTS preload). An earlier draft of this report incorrectly claimed no security headers were configured; that was inaccurate and has been corrected. (The headers were previously in `vercel.json`; they migrated to `public/_headers` when the deployment target switched from Vercel to Cloudflare Pages.) The real remaining gap is the absence of a `Content-Security-Policy` and any `X-Frame-Options` / `frame-ancestors` directive.
-- **Impact:** Without a CSP, any future injection of inline script or third-party asset would execute without restriction. Without `frame-ancestors`/`X-Frame-Options`, the static pages can be embedded in arbitrary iframes (clickjacking). Currently low because the app injects no untrusted content and uses `dangerouslySetInnerHTML` only for hardcoded JSON-LD (`src/lib/structured-data.ts` — app-authored, not user input), but both are cheap defense-in-depth and recommended before production.
-- **Recommended fix:** Add a strict CSP (`default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'`) to `public/_headers`. Inline JSON-LD `<script type="application/ld+json">` is allowed under `script-src 'self'` (it is not inline event handler / eval). Verify JSON-LD still renders after the CSP lands.
-- **Severity note:** Downgraded from the original "no security headers" framing to a focused Low-equivalent gap (kept as Medium here only because CSP + clickjacking protection is a launch-time recommendation, not a current vulnerability).
+- **Status:** **Resolved (Phase 4m, 2026-07-16).** `public/_headers` now ships a strict CSP and `X-Frame-Options: DENY` alongside the four pre-existing security headers. Verified 2026-07-26 against the built `out/` artifacts.
+- **Current headers (`public/_headers`):**
+  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'`
+  - `X-Frame-Options: DENY` (defense-in-depth alongside `frame-ancestors 'none'`)
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+- **CSP tightening analysis (2026-07-26):** The `'unsafe-inline'` in `script-src` was audited for possible removal. The built HTML (`out/index.html`) contains 11 inline `<script>` tags injected by Next.js App Router — these are RSC flight data (`self.__next_f.push([1,"..."])`) essential for React hydration. Their content is per-page and per-build, so neither `'sha256-...'` hashes nor per-request nonces are feasible for a static export (no server runtime to mint nonces). `'unsafe-inline'` in `script-src` is therefore the standard and unavoidable practice for Next.js static-export sites. `'unsafe-inline'` in `style-src` is required by the 335 React inline `style={...}` usages across 32 components. JSON-LD `<script type="application/ld+json">` is exempt from `script-src` per CSP spec and needs no special directive. **Conclusion: the current CSP is as strict as practical for this architecture.**
+- **Original evidence (preserved for traceability):** An earlier draft of this report claimed `public/_headers` had no CSP or X-Frame-Options; that was accurate at review time (2026-07-09) but the gap was closed in Phase 4m (2026-07-16) when the CSP and `X-Frame-Options: DENY` were added.
 
 ---
 
@@ -131,16 +142,16 @@ No external links (`target="_blank"` or otherwise) exist in `src/`. The footer a
 | `/contact` | **Missing** (see M-1) |
 | `/terms` | Not required for a no-account static game, optional |
 
-The About page's "Content sources" and "IP-safe strategy" sections are well-intentioned, but their claims ("Screenshot mode uses public-domain images (such as from Wikimedia Commons and NASA)… Each image carries attribution metadata where its license requires it") are currently **not true of the placeholder assets** (H-1). The copy should either be made true by shipping verified assets, or softened to acknowledge placeholders during development.
+The About page's "Content sources" and "IP-safe strategy" sections are well-intentioned, and their claims ("Screenshot mode uses public-domain images (such as from Wikimedia Commons and NASA)… Each image carries attribution metadata where its license requires it") are now **true** — both screenshot assets are verified public-domain NASA images with per-file attribution (H-1 resolved 2026-07-26).
 
 ---
 
 ## Recommended Action Priority
 
-1. **H-1** (fabricated attribution) — **corrected in-code this phase**: fixtures relabeled to `imageLicense: "placeholder"`. Verified assets must still replace placeholders before screenshot mode ships publicly.
+1. **H-1** (fabricated attribution) — **resolved (2026-07-26)**: placeholder `.webp` files replaced with verified public-domain NASA images from Wikimedia Commons; per-file attribution set to real license metadata.
 2. **M-1** (Privacy + Contact pages) — add before production launch.
-3. **M-3** (CSP + X-Frame-Options/frame-ancestors) — add before production launch (note: `vercel.json` already ships 4 other security headers).
-4. **M-2** (answer-exposure honesty note) — copy addition, low effort.
+3. **M-3** (CSP + X-Frame-Options/frame-ancestors) — **resolved (Phase 4m, 2026-07-16)**: strict CSP + `X-Frame-Options: DENY` shipped in `public/_headers`; CSP tightening audited 2026-07-26 and confirmed as strict as practical for Next.js static export.
+4. **M-2** (answer-exposure honesty note) — **resolved (2026-07-26)**: honor-system paragraph added to the About page.
 5. **L-1 … L-4** — hardening, address opportunistically.
 
 This review is read-only; no business implementation was modified.

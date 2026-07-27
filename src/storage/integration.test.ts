@@ -17,6 +17,8 @@ import {
 } from "./actions";
 import { exportState, loadState, resetState } from "./client";
 import { createDefaultState } from "./defaults";
+import { STORAGE_KEY } from "./keys";
+import { todayUtc } from "./__testutils__/helpers";
 
 /**
  * End-to-end integration tests for the storage layer.
@@ -24,12 +26,6 @@ import { createDefaultState } from "./defaults";
  * Exercises the full loadState → actions → saveState → loadState cycle to
  * verify data round-trips correctly across a simulated session boundary.
  */
-
-// --- Date helpers --------------------------------------------------------
-
-function todayUtc(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // --- Setup ---------------------------------------------------------------
 
@@ -83,8 +79,12 @@ describe("integration — full daily session", () => {
     // (3) Complete the daily challenge.
     expect(completeDailyChallenge(today).changed).toBe(true);
 
-    // (4) Recalculate the streak (first-ever activity → 1).
-    expect(recalcStreak(today).changed).toBe(true);
+    // (4) Streak is already recalculated by recordModeResult (slice 4d-8:
+    //     completing a puzzle folds streak recalc into the save cycle). The
+    //     first completion (keywords above) set the streak to 1; subsequent
+    //     same-day completions are idempotent. An explicit recalcStreak is
+    //     now a no-op.
+    expect(recalcStreak(today).changed).toBe(false);
 
     // (5) Unlock an achievement.
     expect(unlockAchievement("daily-complete").changed).toBe(true);
@@ -204,5 +204,80 @@ describe("integration — export → reset → reload", () => {
     // Reset → storage is empty.
     resetState();
     expect(loadState()).toEqual(createDefaultState());
+  });
+});
+
+describe("integration — real localStorage V1→V2 migration (P2-30)", () => {
+  it("loads a V1 payload written directly to localStorage and migrates it to V2", () => {
+    // Use the REAL jsdom localStorage (not the injected memory adapter) to
+    // exercise the genuine loadState → migrate → V2Schema chain end-to-end.
+    __setAdapterForTesting(null);
+    window.localStorage.clear();
+
+    const base = createDefaultState();
+    const today = todayUtc();
+    base.daily[today] = {
+      kw: {
+        puzzleId: "kw-001",
+        score: 88,
+        revealedClues: 1,
+        wrongGuesses: ["volcano"],
+        status: "solved",
+        updatedAt: "2026-07-15T10:00:00.000Z",
+      },
+    };
+
+    // Construct a V1-shaped payload: schemaVersion 1, settings empty, and
+    // without the V2-only completedPuzzleIds/recentPuzzleIds/achievements keys.
+    const v1Payload = {
+      schemaVersion: 1,
+      daily: base.daily,
+      streak: base.streak,
+      stats: base.stats,
+      settings: {},
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Payload));
+
+    const loaded = loadState();
+
+    // Migrated to V2 and daily data preserved.
+    expect(loaded.schemaVersion).toBe(2);
+    expect(loaded.daily[today]?.kw?.score).toBe(88);
+
+    // V1 empty settings upgraded to full V2 defaults.
+    expect(loaded.settings).toEqual({
+      theme: "system",
+      reducedMotion: false,
+      soundEnabled: true,
+    });
+
+    // V2-only collections initialized by the migrator.
+    expect(loaded.completedPuzzleIds).toEqual([]);
+    expect(loaded.recentPuzzleIds).toEqual([]);
+    expect(loaded.achievements.unlocked).toEqual([]);
+
+    window.localStorage.clear();
+  });
+
+  it("stashes a corrupted raw payload under :corrupted and returns defaults instead of throwing", () => {
+    __setAdapterForTesting(null);
+    window.localStorage.clear();
+
+    // Write unparseable garbage. loadState only stashes to :corrupted when
+    // JSON.parse THROWS — valid-JSON-but-wrong-shape flows through to migrate()
+    // instead. Using a syntactically broken string exercises the actual
+    // corruption-recovery path (project rule: never overwrite the primary key
+    // on parse failure; stage the raw bytes under :corrupted for recovery).
+    window.localStorage.setItem(STORAGE_KEY, "{ broken json");
+
+    const loaded = loadState();
+    // Corrupt state must not crash loadState; it returns a fresh default.
+    expect(loaded).toEqual(createDefaultState());
+
+    // The original corrupt payload is preserved under :corrupted (not overwritten).
+    const stashed = window.localStorage.getItem(STORAGE_KEY + ":corrupted");
+    expect(stashed).toBe("{ broken json");
+
+    window.localStorage.clear();
   });
 });

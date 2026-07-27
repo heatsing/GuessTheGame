@@ -65,12 +65,28 @@ These operational rules govern how agents (PM, Architect, Engineer, Reviewer, De
 - `docs/ux-design.md` — UX and interface system
 - `docs/STATUS.md` — Phase tracker
 - `docs/DECISIONS.md` — Architecture decision records
+- `docs/ExecPlan.md` — Execution plan and phase breakdown
+- `docs/SECURITY-REVIEW.md` — Security, privacy & copyright review
+- `docs/deployment.md` — Deployment, preview/prod, cache, rollback, smoke test
+- `docs/testing/final-code-review.md` — Consolidated review findings (P0/P1/P2)
 - `docs/handoff/` — Phase handoff summaries
 
 ## Commit Conventions
 
+This project follows [Conventional Commits](https://www.conventionalcommits.org/). The historical phase commits are listed first; the full set of valid types is enumerated below.
+
+Historical:
 - `docs: define product requirements and game rules`
 - `docs: define static application architecture`
 - `docs: define user experience and interface system`
-- `feat:` for code implementation (future phases)
-- `fix:` for bug fixes
+
+Valid types (all used in this repo):
+- `docs:` — documentation and spec changes
+- `feat:` — new features / code implementation
+- `fix:` — bug fixes
+- `chore:` — tooling, config, phase wrap-up, dependency maintenance
+- `refactor:` — code restructuring with no behavior change
+- `perf:` — performance improvements
+- `test:` — adding or correcting tests
+- `ci:` — CI/CD pipeline changes
+- `revert:` — reverting a prior commit

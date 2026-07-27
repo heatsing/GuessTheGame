@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface TimelineItem {
   id: string;
@@ -18,14 +18,33 @@ export interface TimelineControlsProps {
 /**
  * Keyboard- and screen-reader-accessible alternative to drag-and-drop for the
  * Timeline mode. Each item exposes "Move up" / "Move down" buttons (44px
- * touch targets) and the list is an ARIA listbox so assistive tech announces
+ * touch targets) and the list is an ARIA `list` so assistive tech announces
  * position. Sighted players can also use the buttons instead of dragging.
+ *
+ * Roving tabindex (review P2-39): exactly one `<li>` carries `tabIndex={0}`
+ * (the "focused" item) and the rest carry `tabIndex={-1}`. This gives the
+ * whole list a single Tab stop while still allowing Arrow keys to move the
+ * focused item. After a keyboard move, DOM focus follows the moved item so the
+ * player can chain Arrow presses without re-Tabbing.
  *
  * Drag-and-drop may still be layered on top later; this guarantees a working
  * non-pointer path regardless of motor ability or input device.
  */
 export function TimelineControls({ items, onReorder, onSubmit }: TimelineControlsProps) {
   const [focusedIndex, setFocusedIndex] = useState(0);
+  // Refs for each <li> so we can move DOM focus after a keyboard reorder.
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  // Tracks whether the latest focusedIndex change came from a move (vs. an
+  // initial mount / external focus) so the focus-follow effect only fires
+  // after an actual Arrow-key reorder, not on first render.
+  const movedRef = useRef(false);
+
+  useEffect(() => {
+    if (movedRef.current) {
+      itemRefs.current[focusedIndex]?.focus();
+      movedRef.current = false;
+    }
+  }, [focusedIndex]);
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
@@ -36,6 +55,7 @@ export function TimelineControls({ items, onReorder, onSubmit }: TimelineControl
     if (!moved) return;
     next.splice(target, 0, moved);
     onReorder(next);
+    movedRef.current = true;
     setFocusedIndex(target);
   }
 
@@ -63,7 +83,9 @@ export function TimelineControls({ items, onReorder, onSubmit }: TimelineControl
         {items.map((item, index) => (
           <li
             key={item.id}
-            tabIndex={0}
+            ref={(el) => { itemRefs.current[index] = el; }}
+            // Roving tabindex: only the focused item is a Tab stop (P2-39).
+            tabIndex={index === focusedIndex ? 0 : -1}
             onFocus={() => setFocusedIndex(index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             aria-label={`Position ${index + 1} of ${items.length}: ${item.title}`}
@@ -125,7 +147,7 @@ function itemStyle(focused: boolean): React.CSSProperties {
     backgroundColor: "var(--color-surface)",
     border: `1px solid ${focused ? "var(--color-border-focus)" : "var(--color-border)"}`,
     borderRadius: "var(--radius-md)",
-    minHeight: "44px",
+    minHeight: "var(--touch-target-min)",
     cursor: "default",
   };
 }

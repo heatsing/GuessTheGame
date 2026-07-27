@@ -5,7 +5,8 @@
   "target": "Mount Everest",
   "aliases": ["mount everest", "everest"],
   "image": "/images/puzzles/ss-001.webp",
-  "imageLicense": "placeholder",
-  "imageAttribution": "Generated placeholder — not a licensed asset. Replace with a verified IP-safe public-domain image before screenshot mode ships.",
+  "blurSrc": "/images/puzzles/ss-001-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA ISS Expedition 8 Crew — The Many Faces of Mount Everest (NASA Earth Observatory). Source: Wikimedia Commons (Mount_Everest_ISS008-E-6150.JPG).",
   "fact": "Mount Everest is Earth's highest mountain above sea level, located in the Himalayas on the border of Nepal and China."
 }

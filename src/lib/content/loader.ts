@@ -21,11 +21,25 @@ import {
  * No runtime backend, no database — see `docs/PRD.md` §1 and `docs/architecture.md`.
  */
 
-const DATA_DIR = join(process.cwd(), "src", "data");
+// Base directory for puzzle JSON. Defaults to `src/data` under the cwd; the
+// `GTG_DATA_DIR` env override exists solely so unit tests can point the loader
+// at a temp fixture tree instead of mocking `node:fs` (which is fragile under
+// vitest module hoisting). Production builds never set it.
+//
+// Read on each call (not captured at module-eval time) so tests that swap the
+// env between cases do not need `vi.resetModules()` — which would otherwise
+// pollute the module cache for subsequent tests in the same file. The cost is
+// one `process.env` read per loader call, which is negligible (loader runs at
+// build time / on-demand, not in hot loops).
+function dataDir(): string {
+  return process.env.GTG_DATA_DIR
+    ? join(process.env.GTG_DATA_DIR)
+    : join(process.cwd(), "src", "data");
+}
 
 /** Resolves the absolute path to a mode's data directory. */
 function modeDir(mode: Mode): string {
-  return join(DATA_DIR, mode);
+  return join(dataDir(), mode);
 }
 
 /** Reads and validates a single puzzle JSON file. Returns null on any error. */

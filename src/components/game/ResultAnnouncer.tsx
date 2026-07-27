@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export type GameResult =
   | { status: "idle" }
@@ -24,14 +24,13 @@ export interface ResultAnnouncerProps {
  */
 export function ResultAnnouncer({ result }: ResultAnnouncerProps) {
   const [message, setMessage] = useState("");
-  const regionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMessage(renderMessage(result));
   }, [result]);
 
   return (
-    <div ref={regionRef} aria-live="assertive" aria-atomic="true">
+    <div aria-live="polite" aria-atomic="true">
       <span className="visually-hidden">{message}</span>
       {result.status !== "idle" && (
         <span aria-hidden="true" style={badgeStyle(result.status)}>

@@ -41,7 +41,7 @@ Each criterion was checked against real command output, not assumptions.
 | 9 | Modal background inert + focus management | `Modal.tsx` sets inert on siblings, focus trap, Escape; 4 a11y tests pass | ✅ |
 | 10 | Game components CLS-safe + accessible | `GameImage` fixed dims, `ResultAnnouncer` aria-live, `TimelineControls` keyboard | ✅ |
 | 11 | CI gates: typecheck/lint/test/content/build/e2e | `ci.yml` runs all 6; all pass locally | ✅ |
-| 12 | Deploy fires only on CI success on main | `deploy.yml` uses `workflow_run` + `head_branch=='main'` | ✅ |
+| 12 | Deploy fires only on CI success on master | `deploy.yml` uses `workflow_run` + `head_branch=='master'` | ✅ |
 | 13 | No secrets / no PII / no fabricated data | Security review verified; `.env.example` only public var | ✅ |
 | 14 | IP-safe content (no false attribution) | ss-001/ss-002 relabeled to `placeholder` this phase | ✅ |
 

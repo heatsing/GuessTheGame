@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
+import { ToastProvider } from "@/components/ui/Toast";
 import {
   webApplicationSchema,
   websiteSchema,
@@ -40,6 +41,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: SITE_CONFIG.ogImage,
+        width: 1200,
+        height: 630,
         alt: SITE_CONFIG.name,
       },
     ],
@@ -85,15 +88,20 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <a href="#main-content" className="skip-link">
-          Skip to content
-        </a>
-        <SiteHeader />
-        <main id="main-content" className="gtg-main">
-          {children}
-        </main>
-        <SiteFooter />
-        <BottomNav />
+        {/* ToastProvider must wrap all page content so any client component
+            calling useToast() finds a context (P1-4). Without this the first
+            useToast() call throws and white-screens the page. */}
+        <ToastProvider>
+          <a href="#main-content" className="skip-link">
+            Skip to content
+          </a>
+          <SiteHeader />
+          <main id="main-content" className="gtg-main">
+            {children}
+          </main>
+          <SiteFooter />
+          <BottomNav />
+        </ToastProvider>
       </body>
     </html>
   );

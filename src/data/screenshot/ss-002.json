@@ -5,7 +5,8 @@
   "target": "Sahara",
   "aliases": ["sahara", "sahara desert"],
   "image": "/images/puzzles/ss-002.webp",
-  "imageLicense": "placeholder",
-  "imageAttribution": "Generated placeholder — not a licensed asset. Replace with a verified IP-safe public-domain image before screenshot mode ships.",
+  "blurSrc": "/images/puzzles/ss-002-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA Goddard Space Flight Center — Desert Patterns (via Flickr). Source: Wikimedia Commons (Desert_Patterns_(5182689540).jpg).",
   "fact": "The Sahara is the largest hot desert in the world, covering much of North Africa."
 }

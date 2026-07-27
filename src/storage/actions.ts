@@ -1,4 +1,6 @@
 import type { Mode } from "@/lib/content/schemas";
+import { normalizeAnswer } from "@/lib/game/match";
+import { computeDailyTotal } from "@/lib/game/scoring";
 import { RECENT_PUZZLES_CAP } from "./keys";
 import { createDefaultState } from "./defaults";
 import { dedupe, subtractDays } from "./internal";
@@ -55,21 +57,61 @@ function modeToKey(mode: Mode): ModeKey {
 
 /**
  * Sums the scores of every present mode in a `DailyProgress` entry.
+ * Delegates to the pure `computeDailyTotal` in the scoring engine
+ * (guardrail #4 — single source of truth for the day-total formula).
  * Returns 0 when no modes are present. Max theoretical value is 400
  * (4 modes × 100).
  */
 function computeDayTotal(day: DailyProgress): number {
-  let total = 0;
-  if (day.kw) total += day.kw.score;
-  if (day.em) total += day.em.score;
-  if (day.ss) total += day.ss.score;
-  if (day.tl) total += day.tl.score;
-  return total;
+  return computeDailyTotal({
+    keywords: day.kw?.score,
+    emoji: day.em?.score,
+    screenshot: day.ss?.score,
+    timeline: day.tl?.score,
+  });
 }
 
 /** Returns true if the value is a completed status (solved or given_up). */
 function isCompletedStatus(status: ModeStatus): boolean {
   return status === "solved" || status === "given_up";
+}
+
+/**
+ * Pure streak recalculation (PRD §7.3). Given the current streak state and
+ * today's UTC date, returns the streak state after a completed puzzle:
+ *  - `lastActiveDate === yesterday` → `current + 1`.
+ *  - `lastActiveDate === today` → `current` unchanged (idempotent).
+ *  - Otherwise (broken streak or first-ever activity) → `current = 1`.
+ *  - `max` is updated to `max(max, current)`.
+ *  - `lastActiveDate` is set to `date`.
+ *
+ * Extracted so `recordModeResult` can fold streak recalculation into its
+ * single save cycle (slice 4d-8) without a second loadState/saveState round
+ * trip, while `recalcStreak` remains exported for explicit recalculation.
+ */
+function computeRecalculatedStreak(
+  streak: StreakState,
+  date: UtcDate,
+): StreakState {
+  const yesterday = subtractDays(date, 1);
+
+  let newCurrent: number;
+  if (streak.lastActiveDate === yesterday) {
+    newCurrent = streak.current + 1;
+  } else if (streak.lastActiveDate === date) {
+    // Already active today — no change (idempotent).
+    newCurrent = streak.current;
+  } else {
+    // Streak broken or first-ever activity.
+    newCurrent = 1;
+  }
+
+  const newMax = Math.max(streak.max, newCurrent);
+  return {
+    current: newCurrent,
+    max: newMax,
+    lastActiveDate: date,
+  };
 }
 
 // --- Read helpers --------------------------------------------------------
@@ -171,11 +213,23 @@ export function recordModeResult(
   const dayEntry: DailyProgress = { ...(existingDay ?? {}) };
   const existing = dayEntry[key];
 
+  // Defensive normalization (P1-1): clamp/validate inputs BEFORE constructing
+  // the persisted record so a caller bug (score > 100, negative revealedClues,
+  // empty-string wrong guess) cannot poison the on-disk state and trigger a
+  // full-state discard on the next loadState.
+  const clampedScore = Math.max(0, Math.min(100, Math.trunc(result.score) || 0));
+  const clampedRevealedClues = Math.max(0, Math.trunc(result.revealedClues) || 0);
+  const cleanedWrongGuesses = dedupe(
+    result.wrongGuesses
+      .map((g) => normalizeAnswer(g))
+      .filter((g) => g.length > 0),
+  );
+
   const newProgress: ModeProgress = {
     puzzleId: result.puzzleId,
-    score: result.score,
-    revealedClues: result.revealedClues,
-    wrongGuesses: dedupe(result.wrongGuesses),
+    score: clampedScore,
+    revealedClues: clampedRevealedClues,
+    wrongGuesses: cleanedWrongGuesses,
     status: result.status,
     updatedAt: new Date().toISOString(),
   };
@@ -202,6 +256,14 @@ export function recordModeResult(
       newProgress.score <= existing.score
     ) {
       // Keep the better solved score.
+      return { changed: false, state };
+    }
+
+    // `given_up` is terminal (P1-6): once a puzzle has been given up, a later
+    // `solved` attempt for the same day+mode MUST NOT overwrite it. PRD §5.1:
+    // "Once a puzzle is answered (correctly or via give-up), the result is
+    // locked."
+    if (existing.status === "given_up") {
       return { changed: false, state };
     }
     // Otherwise: fall through and overwrite with the new result.
@@ -278,10 +340,22 @@ export function recordModeResult(
     completedPuzzleIds = [...completedPuzzleIds, newProgress.puzzleId];
   }
 
+  // --- Update streak (PRD §7.3) ------------------------------------------
+  // A streak day counts when the player completes at least 1 puzzle in the
+  // Daily Challenge for that UTC day. Folding the recalculation into the
+  // same save cycle guarantees the streak is always consistent with the
+  // recorded progress — no separate `recalcStreak` call needed at the call
+  // site (slice 4d-8). The recalculation is idempotent, so a duplicate or
+  // upgrade record (same date) leaves the streak unchanged.
+  const newStreak = isCompleting
+    ? computeRecalculatedStreak(state.streak, date)
+    : state.streak;
+
   const newState: PersistedState = {
     ...state,
     daily: newDaily,
     stats,
+    streak: newStreak,
     recentPuzzleIds,
     completedPuzzleIds,
   };
@@ -398,10 +472,9 @@ export function updateSettings(
   }
   const state = loadState();
   const newSettings: SettingsState = { ...state.settings, ...partial };
-  const changed =
-    newSettings.theme !== state.settings.theme ||
-    newSettings.reducedMotion !== state.settings.reducedMotion ||
-    newSettings.soundEnabled !== state.settings.soundEnabled;
+  // Compare the full serialized shape (P2-5) so a future SettingsState field
+  // is automatically detected as changed without updating this predicate.
+  const changed = JSON.stringify(newSettings) !== JSON.stringify(state.settings);
   if (!changed) {
     return { changed: false };
   }
@@ -422,45 +495,31 @@ export function updateSettings(
  *  - `max` is updated to `max(max, current)`.
  *  - `lastActiveDate` is set to `date`.
  *
- * SSR-safe.
+ * NOTE: Since slice 4d-8, `recordModeResult` folds streak recalculation into
+ * its own save cycle, so callers no longer need to invoke `recalcStreak`
+ * separately after recording a result. This function remains exported for
+ * explicit recalculation (e.g., a future "repair streak" admin action or a
+ * migration step). SSR-safe.
  */
 export function recalcStreak(date: UtcDate): { changed: boolean } {
   if (typeof window === "undefined" || !isStorageAvailable()) {
     return { changed: false };
   }
   const state = loadState();
-  const streak = state.streak;
-  const yesterday = subtractDays(date, 1);
-
-  let newCurrent: number;
-  if (streak.lastActiveDate === yesterday) {
-    newCurrent = streak.current + 1;
-  } else if (streak.lastActiveDate === date) {
-    // Already active today — no change (idempotent).
-    newCurrent = streak.current;
-  } else {
-    // Streak broken or first-ever activity.
-    newCurrent = 1;
-  }
-
-  const newMax = Math.max(streak.max, newCurrent);
+  const newStreak = computeRecalculatedStreak(state.streak, date);
 
   // No-op if nothing would change.
   if (
-    newCurrent === streak.current &&
-    newMax === streak.max &&
-    streak.lastActiveDate === date
+    newStreak.current === state.streak.current &&
+    newStreak.max === state.streak.max &&
+    state.streak.lastActiveDate === date
   ) {
     return { changed: false };
   }
 
   const newState: PersistedState = {
     ...state,
-    streak: {
-      current: newCurrent,
-      max: newMax,
-      lastActiveDate: date,
-    },
+    streak: newStreak,
   };
   saveState(newState);
   return { changed: true };

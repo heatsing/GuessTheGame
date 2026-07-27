@@ -68,7 +68,7 @@ export function SiteFooter() {
                     color: "var(--color-text-muted)",
                     fontSize: "var(--font-size-sm)",
                     textDecoration: "none",
-                    minHeight: "44px",
+                    minHeight: "var(--touch-target-min)",
                     display: "inline-flex",
                     alignItems: "center",
                   }}

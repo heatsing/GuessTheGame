@@ -7,7 +7,7 @@
  * emitting disallowed types (no Review / AggregateRating — see SEO task spec).
  */
 
-import { SITE_CONFIG, canonicalUrl } from "@/lib/site-config";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 // Use a loose record type so we can hand-author schema.org JSON without
 // fighting TypeScript over optional fields we deliberately omit.
@@ -28,7 +28,7 @@ export function websiteSchema(): JsonLd {
 /**
  * WebApplication schema describing the game itself.
  *
- * `offers.price = "0"` advertises the game as free. No Review or
+ * `offers.price = 0` advertises the game as free. No Review or
  * AggregateRating is emitted — the product has no real rating system and
  * fabricating one would violate the SEO task constraints.
  */
@@ -44,7 +44,7 @@ export function webApplicationSchema(): JsonLd {
     inLanguage: SITE_CONFIG.locale,
     offers: {
       "@type": "Offer",
-      price: "0",
+      price: 0,
       priceCurrency: "USD",
     },
   };
@@ -75,29 +75,37 @@ export function faqPageSchema(faqs: readonly FaqEntry[]): JsonLd {
 }
 
 /**
- * BreadcrumbList schema for navigation breadcrumbs. Used on inner pages to
- * help crawkers understand site hierarchy.
+ * Escapes characters that would break out of an inline
+ * `<script type="application/ld+json">` tag or that are not valid inside
+ * JavaScript string literals (and therefore inside JSON embedded in HTML).
+ *
+ * - `<` and `>` prevent the HTML parser from interpreting `</script>` or
+ *   other tag-like sequences as markup while the script content is being
+ *   consumed.
+ * - U+2028 (LINE SEPARATOR) and U+2029 (PARAGRAPH SEPARATOR) are valid in
+ *   JSON strings but invalid in JavaScript string literals, so they would
+ *   break the script content if left unescaped.
+ *
+ * Note: `&` is intentionally NOT escaped. JSON-LD inside a `<script>` tag is
+ * parsed as JSON, not as HTML, so `&` has no special meaning there.
  */
-export function breadcrumbSchema(
-  items: ReadonlyArray<{ name: string; path: string }>,
-): JsonLd {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: canonicalUrl(item.path),
-    })),
-  };
+function escapeJsonLd(input: string): string {
+  return input
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 /**
  * Serializes one or more JSON-LD objects into the string form expected inside
  * a `<script type="application/ld+json">` tag. Used by the `JsonLdScript`
  * component so callers never touch `dangerouslySetInnerHTML` directly.
+ *
+ * The `JSON.stringify` output is run through `escapeJsonLd` so the resulting
+ * string is safe to embed inline in the document (see `escapeJsonLd` for the
+ * exact characters that are escaped).
  */
 export function serializeJsonLd(data: JsonLd | JsonLd[]): string {
-  return JSON.stringify(Array.isArray(data) ? data : [data]);
+  return escapeJsonLd(JSON.stringify(Array.isArray(data) ? data : [data]));
 }

@@ -39,7 +39,7 @@ export const SITE_CONFIG: SiteConfig = {
   locale: "en_US",
   twitterHandle: "@guessthegame",
   themeColor: "#0e1116",
-  ogImage: "/og.png",
+  ogImage: "/og.jpg",
 };
 
 /**
@@ -158,11 +158,6 @@ const MODE_BY_SLUG: ReadonlyMap<Mode, ModeInfo> = new Map(
   MODES.map((m) => [m.slug, m]),
 );
 
-/** Returns the `ModeInfo` for a mode slug, or `undefined` if unknown. */
-export function modeInfo(slug: Mode): ModeInfo | undefined {
-  return MODE_BY_SLUG.get(slug);
-}
-
 /**
  * Returns the `ModeInfo` for a mode slug, throwing if not found.
  *
@@ -170,6 +165,10 @@ export function modeInfo(slug: Mode): ModeInfo | undefined {
  * constant — the throw guarantees a non-`undefined` return so TypeScript can
  * narrow without a closure guard (function declarations are hoisted, so a
  * module-level `if (!info) throw` does not narrow inside them).
+ *
+ * (The earlier optional-returning `modeInfo()` helper was removed — it had no
+ * callers; review P2-50. Use `getModeInfo` and narrow on the throw, or filter
+ * `MODES` directly when you need to tolerate an unknown slug.)
  */
 export function getModeInfo(slug: Mode): ModeInfo {
   const info = MODE_BY_SLUG.get(slug);
@@ -242,6 +241,12 @@ export const PAGE_METADATA = {
     description:
       "Play five guessing game modes — Daily Mixed Challenge, Keywords, Emoji, Screenshot, and Timeline. No login, no ads, under three minutes.",
     path: "/",
+  },
+  daily: {
+    title: "Daily Mixed Challenge",
+    description:
+      "Play today's Daily Mixed Challenge — four puzzles across Keywords, Emoji, Screenshot, and Timeline. Build a streak, multiply your score, and share your result.",
+    path: "/daily",
   },
   howToPlay: {
     title: "How to Play",

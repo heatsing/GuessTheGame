@@ -3,18 +3,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { __setAdapterForTesting, createMemoryAdapter } from "./adapter";
 import { getProgress, recordModeResult } from "./actions";
 import { loadState, resetState } from "./client";
+import { daysAgo, todayUtc } from "./__testutils__/helpers";
 
 /** Edge cases that complement the core storage test suites. */
-
-function todayUtc(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function daysAgo(n: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
-}
 
 beforeEach(() => {
   __setAdapterForTesting(createMemoryAdapter());

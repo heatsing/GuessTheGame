@@ -78,8 +78,6 @@ export type StreakState = z.infer<typeof StreakStateSchema>;
 
 // --- Stats ---------------------------------------------------------------
 
-const MODE_KEYS = ["keywords", "emoji", "screenshot", "timeline"] as const;
-
 const modeCountMap = z.object({
   keywords: z.number().int().min(0),
   emoji: z.number().int().min(0),
@@ -175,4 +173,3 @@ export interface PersistedStateV1 {
   settings: Record<string, never>;
 }
 
-export { MODE_KEYS };

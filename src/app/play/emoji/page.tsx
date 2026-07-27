@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 import { getModeInfo } from "@/lib/site-config";
 import { buildPageMetadata } from "@/lib/metadata";
 import { RelatedModes } from "@/components/seo/RelatedModes";
+import { selectDailyPuzzleForMode } from "@/lib/game/select";
+import { EmojiGame } from "@/components/game/EmojiGame";
+import { utcToday } from "@/lib/game/utc";
+import type { EmojiPuzzle } from "@/lib/content/schemas";
 
 const info = getModeInfo("emoji");
 
@@ -13,7 +17,19 @@ export const metadata: Metadata = buildPageMetadata({
   keywords: info.keywords,
 });
 
+/**
+ * Emoji play page (PRD §5.3).
+ *
+ * Server component: fetches the puzzle at build/request time via the
+ * deterministic daily selector (same UTC date → same puzzle for every visitor,
+ * SSR-friendly — no Math.random on the server). The playable board is a client
+ * component (`EmojiGame`) that owns guess/hint state and persists results via
+ * `recordModeResult`.
+ */
 export default function EmojiPage() {
+  const today = utcToday();
+  const puzzle = selectDailyPuzzleForMode("emoji", today) as EmojiPuzzle | null;
+
   return (
     <div
       style={{
@@ -65,15 +81,14 @@ export default function EmojiPage() {
         </p>
       </section>
 
-      {/* Game interaction area — placeholder for the playable Emoji game. */}
-      <section
-        aria-label="Play Emoji"
-        className="gtg-card"
-        style={{ minHeight: "240px", display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
-        <p style={{ color: "var(--color-text-muted)" }}>
-          The Emoji game board will appear here.
-        </p>
+      <section aria-label="Play Emoji" className="gtg-card">
+        {puzzle ? (
+          <EmojiGame puzzle={puzzle} utcDate={today} />
+        ) : (
+          <p style={{ color: "var(--color-text-muted)", padding: "var(--space-6)", textAlign: "center" }}>
+            No Emoji puzzle is available right now. Please check back later.
+          </p>
+        )}
       </section>
 
       <RelatedModes currentSlug={info.slug} />

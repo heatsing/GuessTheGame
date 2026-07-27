@@ -73,6 +73,40 @@ export default function HomePage() {
       </h1>
 
       <section
+        aria-label="Daily Mixed Challenge"
+        style={{ marginBottom: "var(--space-10)" }}
+      >
+        <Link
+          href="/daily"
+          className="gtg-card gtg-card-interactive"
+          style={{
+            display: "block",
+            textDecoration: "none",
+            color: "var(--color-text)",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "var(--font-size-lg)",
+              marginBottom: "var(--space-2)",
+            }}
+          >
+            Daily Mixed Challenge
+          </h2>
+          <p
+            style={{
+              color: "var(--color-text-muted)",
+              fontSize: "var(--font-size-sm)",
+              lineHeight: "var(--line-height-relaxed)",
+            }}
+          >
+            Four puzzles every UTC day — Keywords, Emoji, Screenshot, and
+            Timeline. Build a streak to multiply your score.
+          </p>
+        </Link>
+      </section>
+
+      <section
         aria-label="Quick play modes"
         style={{ marginBottom: "var(--space-10)" }}
       >

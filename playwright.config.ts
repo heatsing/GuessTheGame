@@ -1,10 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright config. E2E tests live in `e2e/` and run against the Next.js dev
- * server. The static export (next build) is validated separately by the build
- * gate; these tests cover runtime behavior: keyboard operability, 404, and
- * server-rendered content.
+ * Playwright config. E2E tests live in `e2e/` and run against the PRODUCTION
+ * static export (`out/`), not the dev server — so e2e validates the actual
+ * shipped artifact (P2-33). The webServer builds once, then serves `out/` via
+ * the zero-dependency `scripts/serve-static.mjs` (Node builtins only, so no
+ * new dependency is required). Tests cover runtime behavior: keyboard
+ * operability, 404, and server-rendered content.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -24,9 +26,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // Build the static export, then serve it. `reuseExistingServer` lets a
+    // locally-running server be reused to speed up iteration; in CI a fresh
+    // build+serve is always started.
+    command: "npm run build && npm run serve:static",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 240_000,
   },
 });

@@ -79,7 +79,7 @@ describe("Modal", () => {
   it("焦点陷阱基本功能", async () => {
     const user = userEvent.setup();
     render(
-      <Modal open={true} onClose={vi.fn()} title="标题">
+      <Modal open={true} onClose={vi.fn()} title="标题" showCloseButton={false}>
         <button>第一个</button>
         <button>第二个</button>
       </Modal>
