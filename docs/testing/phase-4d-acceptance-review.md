@@ -1,8 +1,8 @@
 # Phase 4d Acceptance Review — Guess the Game
 
-**Date:** 2026-07-27
+**Date:** 2026-07-27 (updated 2026-07-28 with L-1–L-4 resolution)
 **Reviewer:** Acceptance Lead (agent)
-**Scope:** Phase 4d (game UI wiring, slices 4d-1 through 4d-8) + carryover resolution (P0-1, M-2, M-3)
+**Scope:** Phase 4d (game UI wiring, slices 4d-1 through 4d-8) + carryover resolution (P0-1, M-2, M-3, L-1, L-2, L-3, L-4)
 **Verdict:** **PASS** (pending owner approval — guardrail #13)
 
 ---
@@ -13,11 +13,12 @@
 |------|---------|--------|
 | Typecheck | `npm run typecheck` | clean (tsc --noEmit, 0 errors) |
 | Lint | `npm run lint` | 0 errors, 0 warnings |
-| Unit tests | `npm run test` | 401 tests, 29 files, all pass |
+| Unit tests | `npm run test` | 413 tests, 30 files, all pass |
 | Content check | `npm run content:check` | 8 puzzles valid, 0 missing, 0 oversized |
-| Build | `npm run build` | 18 pages compiled (Windows NTFS phantom-file bug on local export copy only; CI/Linux unaffected) |
+| Build | `npm run build` | 18 pages compiled, Next.js 15.5.22 (Windows NTFS phantom-file bug on local export copy only; CI/Linux unaffected) |
+| Audit (critical) | `npm audit --omit=dev --audit-level=critical` | exit 0 — no critical production vulnerabilities |
 
-Test count trajectory across Phase 4d: 229 → 285 (+56, 4d-1/2) → 300 (+15, 4d-3) → 317 (+17, 4d-4) → 335 (+18, 4d-5) → 351 (+16, 4d-6) → 364 (+13, 4d-7) → 401 (+37, 4d-8). Monotonic growth — no tests deleted (guardrail #6).
+Test count trajectory across Phase 4d: 229 → 285 (+56, 4d-1/2) → 300 (+15, 4d-3) → 317 (+17, 4d-4) → 335 (+18, 4d-5) → 351 (+16, 4d-6) → 364 (+13, 4d-7) → 401 (+37, 4d-8) → 413 (+12, L-1 share page tests). Monotonic growth — no tests deleted (guardrail #6).
 
 ---
 
@@ -29,7 +30,7 @@ Test count trajectory across Phase 4d: 229 → 285 (+56, 4d-1/2) → 300 (+15, 4
 
 ### #2 — No major framework upgrades without approval
 
-**PASS.** `package.json` runtime deps unchanged: `next ^15.5.20`, `react ^19.0.0`, `react-dom ^19.0.0`, `zod ^3.24.0`. No version bumps during Phase 4d.
+**PASS.** `package.json` runtime deps: `next ^15.5.20`, `react ^19.0.0`, `react-dom ^19.0.0`, `zod ^3.24.0`. The `^15.5.20` range was unchanged during Phase 4d. The L-2 security hardening applied `npm audit fix` which upgraded the resolved `next` version from 15.5.20 to 15.5.22 — this is a patch within the same minor version (15.5.x), not a major or minor upgrade, and falls within the `^15.5.20` range already declared in `package.json`. No `package.json` version ranges were modified. Compliant with guardrail #2.
 
 ### #3 — No casual dependencies
 
@@ -81,9 +82,9 @@ No client component (`*.tsx` outside `src/storage/`) makes direct `localStorage`
 
 ### #12 — No skipped handoff documents
 
-**PASS with minor note.** Phase-transition handoffs documented: `phase-1-to-2-3.md`, `phase-2-to-4.md`, `phase-3-to-4.md`, `phase-4e-4j-acceptance.md`, `phase-a-to-bc.md`, `phase-bc-to-d.md`. Phase 4d slice handoffs: `slice-4d-6-timeline.md`, `slice-4d-7-preload-compression.md`, `slice-4d-8-daily-challenge.md`, `p0-1-asset-replacement.md`.
+**PASS.** Phase-transition handoffs documented: `phase-1-to-2-3.md`, `phase-2-to-4.md`, `phase-3-to-4.md`, `phase-4e-4j-acceptance.md`, `phase-a-to-bc.md`, `phase-bc-to-d.md`. Phase 4d slice handoffs: `slice-4d-6-timeline.md`, `slice-4d-7-preload-compression.md`, `slice-4d-8-daily-challenge.md`, `p0-1-asset-replacement.md`, `l1-l4-security-hardening.md`.
 
-Minor note: slices 4d-1 through 4d-5 used STATUS.md Key Decisions Log entries rather than dedicated `docs/handoff/` files. This is acceptable (sub-slice checkpoints, not phase transitions) but noted for completeness. The phase-closing slice (4d-8) and the carryover (P0-1) both have full handoff docs.
+Minor note: slices 4d-1 through 4d-5 used STATUS.md Key Decisions Log entries rather than dedicated `docs/handoff/` files. This is acceptable (sub-slice checkpoints, not phase transitions) but noted for completeness. The phase-closing slice (4d-8) and all carryover items (P0-1, L-1–L-4) have full handoff docs.
 
 ### #13 — No automatic phase advancement
 
@@ -99,9 +100,12 @@ Minor note: slices 4d-1 through 4d-5 used STATUS.md Key Decisions Log entries ra
 | M-1 Privacy + Contact pages | Medium | Open — requires new pages (new feature), deferred to post-4d-acceptance |
 | M-2 Answer-exposure honesty | Medium | **RESOLVED** (2026-07-26) — honor-system paragraph added to About page |
 | M-3 CSP + clickjacking | Medium | **RESOLVED** (Phase 4m, audited 2026-07-26) — strict CSP + X-Frame-Options: DENY in `public/_headers` |
-| L-1…L-4 | Low | Deferred (opportunistic hardening) |
+| L-1 Share route validation | Low | **RESOLVED** (2026-07-27) — `RESULT_ID_REGEX` validation + 12 unit tests |
+| L-2 CI dependency scan | Low | **RESOLVED** (2026-07-27) — two-tier audit (blocking critical, advisory high) + next 15.5.22 patch |
+| L-3 JSON-LD price type | Low | **RESOLVED** (Phase 4m, confirmed 2026-07-27) — `price: 0` (number) |
+| L-4 Corrupted-state cleanup | Low | **RESOLVED** (Phase 4m, confirmed 2026-07-27) — `saveState`/`resetState` clear `:corrupted` |
 
-**No P0 or P1 items remain open.** One Medium item (M-1) remains, requiring new pages — deferred per the "no new features during acceptance" constraint.
+**No P0, P1, or Low items remain open.** One Medium item (M-1) remains, requiring new pages — deferred per the "no new features during acceptance" constraint.
 
 ---
 
@@ -119,21 +123,29 @@ All modes: scoring per PRD §7.1, deterministic daily puzzle selection (FNV-1a h
 
 ---
 
-## 5. Uncommitted Work
+## 5. Committed Work
 
-`git diff --stat HEAD`: 54 files changed, 1378 insertions(+), 340 deletions(-). This comprises the entire Phase 4d (slices 4d-1 through 4d-8) plus P0-1/M-2/M-3 resolution. Commit is pending owner direction on slice granularity (single phase commit vs. per-slice commits).
+All Phase 4d work is committed in two commits:
+
+| Commit | Description |
+|--------|-------------|
+| `219e85d` | `feat: wire all five game modes and daily challenge dashboard` — Phase 4d slices 4d-1 through 4d-8 + P0-1/M-2/M-3 resolution |
+| `5153051` | `fix: resolve L-1 through L-4 low-severity security findings` — share route validation, CI two-tier audit, next 15.5.22 patch, SECURITY-REVIEW/STATUS updates |
+
+`git status` is clean — no uncommitted changes.
 
 ---
 
 ## 6. Remaining Pre-Launch Work
 
-1. **M-1:** Add `/privacy` and `/contact` pages (new feature — post-acceptance)
-2. **Content expansion:** 50+ puzzles per mode (currently 8 total)
-3. **L-1…L-4:** Opportunistic low-severity hardening
-4. **Commit:** Phase 4d work needs to be committed (awaiting owner direction)
+1. **M-1:** Add `/privacy` and `/contact` pages (new feature — post-acceptance, requires owner approval per "no new features during acceptance" preference)
+2. **Content expansion:** 50+ puzzles per mode (currently 8 total — 2 per mode × 4 modes, no daily-only puzzles)
+3. **Future:** When a fixed `next` version is released (beyond the 16.3.0-preview.7 advisory range), upgrade and promote the CI Tier 2 advisory audit to blocking
 
 ---
 
 ## 7. Verdict
 
-**PASS** — all 13 guardrails verified compliant, all 5 validation gates green, all P0/P1 findings resolved, no fabricated data or APIs. Phase 4d is ready to close **upon owner approval** (guardrail #13).
+**PASS** — all 13 guardrails verified compliant, all 6 validation gates green (including critical-severity audit), all P0/P1/Low findings resolved, no fabricated data or APIs. Phase 4d is ready to close **upon owner approval** (guardrail #13).
+
+The only remaining open security item is M-1 (Privacy + Contact pages), which is a new-feature requirement deferred to post-acceptance. All other SECURITY-REVIEW.md findings (H-1, M-2, M-3, L-1, L-2, L-3, L-4) are resolved.
