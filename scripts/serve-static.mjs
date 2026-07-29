@@ -16,7 +16,8 @@
  * Usage: `node scripts/serve-static.mjs [port] [outDir]` (defaults: 3000, ./out)
  */
 import { createServer } from "node:http";
-import { existsSync, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 
 const PORT = Number(process.env.PORT ?? process.argv[2] ?? 3000);
@@ -75,11 +76,29 @@ function resolveFile(pathname) {
   return null;
 }
 
+/**
+ * Path to the Next.js-generated 404 page (`out/404.html`). Served with a 404
+ * status when no static file matches the request, so e2e tests and production
+ * (Cloudflare Pages _routes) see the friendly 404 page — not a bare "Not found"
+ * string. Resolved lazily on first miss so the path is always current.
+ */
+const NOT_FOUND_HTML = join(OUT_DIR, "404.html");
+
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
     const file = resolveFile(url.pathname);
     if (!file) {
+      // Serve the Next.js 404 page if it exists; fall back to plain text.
+      if (existsSync(NOT_FOUND_HTML)) {
+        const data = await readFile(NOT_FOUND_HTML);
+        res.writeHead(404, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+        });
+        res.end(data);
+        return;
+      }
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       res.end("Not found");
       return;

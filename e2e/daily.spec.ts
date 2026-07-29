@@ -22,11 +22,13 @@ test.describe("Daily Mixed Challenge page", () => {
     const cards = page.getByLabel("Daily challenge puzzles").getByRole("link");
     await expect(cards).toHaveCount(4);
 
-    // Each card links to the correct mode page.
-    await expect(cards.nth(0)).toHaveAttribute("href", "/play/keywords");
-    await expect(cards.nth(1)).toHaveAttribute("href", "/play/emoji");
-    await expect(cards.nth(2)).toHaveAttribute("href", "/play/screenshot");
-    await expect(cards.nth(3)).toHaveAttribute("href", "/play/timeline");
+    // Each card links to the correct mode page. trailingSlash: true
+    // (next.config.mjs) causes Next.js <Link> to render hrefs with a
+    // trailing slash, so the assertions include it.
+    await expect(cards.nth(0)).toHaveAttribute("href", "/play/keywords/");
+    await expect(cards.nth(1)).toHaveAttribute("href", "/play/emoji/");
+    await expect(cards.nth(2)).toHaveAttribute("href", "/play/screenshot/");
+    await expect(cards.nth(3)).toHaveAttribute("href", "/play/timeline/");
   });
 
   test("keyboard can reach a mode card and follow it", async ({ page }) => {

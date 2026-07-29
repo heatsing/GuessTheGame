@@ -15,12 +15,14 @@ test.describe("Homepage", () => {
 
   test("keyboard can reach play pages from the header", async ({ page }) => {
     await page.goto("/");
-    // Tab through to a header link and follow it with Enter
+    // Tab through to the header "Play" link (href=/play/keywords) and follow
+    // it with Enter. Matching by href (not text) avoids false matches — the
+    // Daily CTA card description also mentions "Keywords".
     for (let i = 0; i < 20; i++) {
       await page.keyboard.press("Tab");
-      const focused = await page.locator(":focus").first();
-      const text = (await focused.textContent()) ?? "";
-      if (/keywords/i.test(text)) {
+      const focused = page.locator(":focus").first();
+      const href = await focused.getAttribute("href");
+      if (href && /\/play\/keywords/.test(href)) {
         await page.keyboard.press("Enter");
         break;
       }
