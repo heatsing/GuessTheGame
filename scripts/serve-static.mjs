@@ -23,7 +23,7 @@ import { extname, join, normalize } from "node:path";
 const PORT = Number(process.env.PORT ?? process.argv[2] ?? 3000);
 const OUT_DIR = normalize(process.argv[3] ?? join(process.cwd(), "out"));
 
-const MIME: Record<string, string> = {
+const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
