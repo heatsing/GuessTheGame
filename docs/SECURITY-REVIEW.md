@@ -12,11 +12,11 @@
 |----------|-------|
 | Critical | 0 |
 | High | 0 (all resolved) |
-| Medium | 1 (M-1 Privacy/Contact pages — deferred) |
+| Medium | 0 (all resolved) |
 | Low | 0 (all resolved) |
 | Informational | 7 |
 
-No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. All previously identified High and Low findings are now **fully resolved**: H-1 (fabricated image attribution), L-1 (share route validation), L-2 (CI dependency scan), L-3 (JSON-LD price type), and L-4 (corrupted-state cleanup). The only remaining open item is M-1 (Privacy + Contact pages), which requires new routes and is deferred to post-4d-acceptance per the "no new features during acceptance" preference.
+No secrets or credentials entered the repository. The static, no-login, no-backend architecture keeps the attack surface small. All previously identified findings are now **fully resolved**: H-1 (fabricated image attribution), M-1 (Privacy + Contact pages), M-2 (answer-exposure honesty note), M-3 (CSP + X-Frame-Options), L-1 (share route validation), L-2 (CI dependency scan), L-3 (JSON-LD price type), and L-4 (corrupted-state cleanup). The security review is now fully green.
 
 ---
 
@@ -47,12 +47,16 @@ _None._
 
 ## Medium
 
-### M-1. No Privacy page and no copyright/contact takedown path
+### M-1. No Privacy page and no copyright/contact takedown path — RESOLVED
 
-- **Location:** `src/app/` (no `/privacy`, `/contact`, or `/terms` route); footer `src/components/layout/SiteFooter.tsx` links only to How to Play / About / Archive / Stats.
-- **Evidence:** Glob for `src/app/{privacy,privacy-policy,contact,terms,copyright}/**` returned no matches. The About page (`src/app/about/page.tsx`) mentions localStorage usage in prose ("your streak, scores, and history live only in your browser via localStorage") but there is no dedicated, linkable privacy statement or a contact channel for copyright concerns.
-- **Impact:** For a no-login, no-tracking static site the privacy risk is low, but a discoverable Privacy page is still expected (discloses localStorage data, retention windows, no-account model). More importantly, there is **no contact path for copyright inquiries/takedowns** — if a contributor accidentally adds a non-IP-safe asset, rights holders have no stated channel to report it.
-- **Recommended fix:** Add `/privacy` (data-in-browser disclosure, retention: daily 60d / last30 30d / recent 20, export & reset available, no accounts, no analytics) and `/contact` (or a `mailto:` / GitHub Issues link) linked from the footer. Reference AGENTS.md's IP-safe constraint.
+- **Location:** `src/app/privacy/page.tsx`, `src/app/contact/page.tsx`, footer `src/components/layout/SiteFooter.tsx`, sitemap `src/app/sitemap.ts`.
+- **Status:** **Resolved (2026-07-30).** Two new routes shipped and linked from the footer:
+  - **`/privacy`** — discloses the no-account, no-analytics, no-ads model; lists exactly what `localStorage` holds under `gtg:state:v1` (daily progress, streak, stats, settings, completed/recent puzzle IDs, achievements); documents retention windows (daily 60d, heatmap 30d, recent 20); explains the Safari-private-mode in-memory fallback; and points to the contact page for takedown inquiries. All retention claims cross-reference `src/storage/keys.ts` and `src/storage/types.ts`.
+  - **`/contact`** — designates GitHub Issues as the monitored contact channel for bug reports, feature requests, privacy questions, and copyright/takedown inquiries. External links use `target="_blank"` + `rel="noopener noreferrer"` per the External Link Safety section below. Sensitive security reports are routed to private GitHub Security Advisories rather than public Issues.
+  - **Footer:** `SiteFooter.tsx` now links Privacy and Contact alongside How to Play / About / Archive / Stats.
+  - **Sitemap:** `sitemap.ts` adds `/privacy` (priority 0.3, `yearly`) and `/contact` (priority 0.3, `yearly`); `SITE_LAST_MODIFIED` bumped to 2026-07-30.
+- **Original evidence (preserved for traceability):** Glob for `src/app/{privacy,privacy-policy,contact,terms,copyright}/**` previously returned no matches. The About page mentioned localStorage usage in prose but there was no dedicated, linkable privacy statement or a contact channel for copyright concerns.
+- **Impact closed:** For a no-login, no-tracking static site the privacy risk was low, but a discoverable Privacy page is now in place. More importantly, the missing contact path for copyright inquiries/takedowns is now filled — if a contributor accidentally adds a non-IP-safe asset, rights holders have a stated channel to report it.
 
 ### M-2. Static answer exposure is an inherent, undisclosed limitation — RESOLVED
 
@@ -130,7 +134,7 @@ _None._
 
 ## External Link Safety
 
-No external links (`target="_blank"` or otherwise) exist in `src/`. The footer and header link only to internal routes. The About page mentions "Wikimedia Commons and NASA" in prose but does not link to them. Therefore there is **no `rel="noopener noreferrer"` gap** today. Recommendation: when external links are later added (e.g. per-image source URLs from H-1), always pair `target="_blank"` with `rel="noopener noreferrer"`.
+The only external links in `src/` are on the Contact page (`src/app/contact/page.tsx`), which links to the GitHub repository for bug reports, feature requests, privacy questions, and copyright/takedown inquiries. Every external anchor is paired with `target="_blank"` and `rel="noopener noreferrer"` to prevent tab-nabbing and Referrer leakage. The footer and header link only to internal routes. The About page mentions "Wikimedia Commons and NASA" in prose but does not link to them. If per-image source URLs are later added (e.g. surfaced from H-1 attribution metadata), they must follow the same `target="_blank"` + `rel="noopener noreferrer"` pattern.
 
 ---
 
@@ -139,8 +143,8 @@ No external links (`target="_blank"` or otherwise) exist in `src/`. The footer a
 | Page | Status |
 |------|--------|
 | `/about` | Exists — documents static/no-login model, IP-safe strategy, content sources |
-| `/privacy` | **Missing** (see M-1) |
-| `/contact` | **Missing** (see M-1) |
+| `/privacy` | **Exists** (M-1 resolved 2026-07-30) — no-account/no-tracking disclosure, localStorage contents, retention windows, export & reset |
+| `/contact` | **Exists** (M-1 resolved 2026-07-30) — GitHub Issues for bugs/features/privacy + copyright/takedown inquiries |
 | `/terms` | Not required for a no-account static game, optional |
 
 The About page's "Content sources" and "IP-safe strategy" sections are well-intentioned, and their claims ("Screenshot mode uses public-domain images (such as from Wikimedia Commons and NASA)… Each image carries attribution metadata where its license requires it") are now **true** — both screenshot assets are verified public-domain NASA images with per-file attribution (H-1 resolved 2026-07-26).
@@ -150,7 +154,7 @@ The About page's "Content sources" and "IP-safe strategy" sections are well-inte
 ## Recommended Action Priority
 
 1. **H-1** (fabricated attribution) — **resolved (2026-07-26)**: placeholder `.webp` files replaced with verified public-domain NASA images from Wikimedia Commons; per-file attribution set to real license metadata.
-2. **M-1** (Privacy + Contact pages) — the only remaining open item; add before production launch. Deferred to post-4d-acceptance per the "no new features during acceptance" preference.
+2. **M-1** (Privacy + Contact pages) — **resolved (2026-07-30)**: `/privacy` and `/contact` routes shipped, linked from the footer, and added to the sitemap; takedown path now available for rights holders.
 3. **M-3** (CSP + X-Frame-Options/frame-ancestors) — **resolved (Phase 4m, 2026-07-16)**: strict CSP + `X-Frame-Options: DENY` shipped in `public/_headers`; CSP tightening audited 2026-07-26 and confirmed as strict as practical for Next.js static export.
 4. **M-2** (answer-exposure honesty note) — **resolved (2026-07-26)**: honor-system paragraph added to the About page.
 5. **L-1** (share route validation) — **resolved (2026-07-27)**: `RESULT_ID_REGEX` validation + 12 unit tests.
@@ -158,4 +162,4 @@ The About page's "Content sources" and "IP-safe strategy" sections are well-inte
 7. **L-3** (JSON-LD price type) — **resolved (Phase 4m, 2026-07-16)**: `price: 0` (number).
 8. **L-4** (corrupted-state cleanup) — **resolved (Phase 4m, 2026-07-16)**: `saveState`/`resetState` clear `:corrupted` key.
 
-All security findings except M-1 are now resolved.
+All security findings are now resolved. The review is fully green as of 2026-07-30.

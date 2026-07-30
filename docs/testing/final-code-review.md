@@ -269,6 +269,12 @@ Owner-directed continuation pass ("继续"). Addressed the remaining opportunist
 - **P2-58.** `BottomNav` label "More" → "Archive" to match `SiteHeader`. The same `/archive` route now has one name across desktop and mobile nav (consistency, not a visual redesign).
 - **P2-59 / P2-60.** `AGENTS.md` commit-convention list expanded from the three historical `docs:` examples to the full Conventional Commits type set actually used in this repo (`docs`/`feat`/`fix`/`chore`/`refactor`/`perf`/`test`/`ci`/`revert`). Document-locations inventory completed with the missing entries (`ExecPlan.md`, `SECURITY-REVIEW.md`, `deployment.md`, `final-code-review.md`).
 
+### P2 — Resolved (M-1 Privacy + Contact pages, 2026-07-30)
+
+Owner-directed continuation ("继续"). Closed the final open security item (SECURITY-REVIEW.md M-1 / P2-14 here). Validation re-run green: **413 unit tests pass (30 files), lint clean, typecheck clean, content:check clean (8 puzzles), build compiles + 20 static pages generated** (+2 vs. the prior 18 — `/privacy` and `/contact`).
+
+- **P2-14 / M-1.** Created `/privacy` (`src/app/privacy/page.tsx`) and `/contact` (`src/app/contact/page.tsx`). Privacy page discloses the no-account/no-analytics/no-ads model, lists exactly what `localStorage` holds under `gtg:state:v1`, documents retention windows (daily 60d, heatmap 30d, recent 20), explains the Safari-private-mode in-memory fallback, and points to the contact page for takedown inquiries — all retention claims cross-reference `src/storage/keys.ts` and `src/storage/types.ts`. Contact page designates GitHub Issues as the monitored channel for bugs, features, privacy questions, and copyright/takedown inquiries; external links use `target="_blank"` + `rel="noopener noreferrer"`. `SiteFooter.tsx` now links both pages; `sitemap.ts` adds `/privacy` and `/contact` (priority 0.3, `yearly`) with `SITE_LAST_MODIFIED` bumped to 2026-07-30. SECURITY-REVIEW.md M-1 marked RESOLVED — the security review is now fully green.
+
 ### Deferred (content/asset + UI wiring only)
 
 - **P0-1 (asset replacement):** verified public-domain screenshot images still need to replace the generated placeholders before screenshot mode goes public. Attribution is correctly flagged as `placeholder` in the meantime.

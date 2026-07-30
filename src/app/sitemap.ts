@@ -24,7 +24,7 @@ export const dynamic = "force-static";
  */
 
 /** Last date indexable page content meaningfully changed. Bump on real edits. */
-const SITE_LAST_MODIFIED = new Date("2026-07-16T00:00:00Z");
+const SITE_LAST_MODIFIED = new Date("2026-07-30T00:00:00Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: Array<{
@@ -92,6 +92,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: SITE_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.4,
+    },
+    {
+      path: "/privacy",
+      lastModified: SITE_LAST_MODIFIED,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      path: "/contact",
+      lastModified: SITE_LAST_MODIFIED,
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
   ];
 

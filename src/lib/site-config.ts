@@ -272,6 +272,18 @@ export const PAGE_METADATA = {
       "About Guess the Game — a static, no-login daily puzzle game built with IP-safe, public-domain content.",
     path: "/about",
   },
+  privacy: {
+    title: "Privacy",
+    description:
+      "Guess the Game privacy statement — no accounts, no analytics, no ads. All progress is stored only in your browser via localStorage.",
+    path: "/privacy",
+  },
+  contact: {
+    title: "Contact",
+    description:
+      "Contact Guess the Game — report bugs, request features, or raise copyright and takedown inquiries via GitHub Issues.",
+    path: "/contact",
+  },
   stats: {
     title: "Stats",
     description:

@@ -97,7 +97,7 @@ Minor note: slices 4d-1 through 4d-5 used STATUS.md Key Decisions Log entries ra
 | Item | Severity | Status |
 |------|----------|--------|
 | H-1 Fabricated image attribution | High | **RESOLVED** (2026-07-26) — placeholder `.webp` replaced with verified public-domain NASA images |
-| M-1 Privacy + Contact pages | Medium | Open — requires new pages (new feature), deferred to post-4d-acceptance |
+| M-1 Privacy + Contact pages | Medium | **RESOLVED** (2026-07-30) — `/privacy` and `/contact` routes shipped, linked from footer, added to sitemap |
 | M-2 Answer-exposure honesty | Medium | **RESOLVED** (2026-07-26) — honor-system paragraph added to About page |
 | M-3 CSP + clickjacking | Medium | **RESOLVED** (Phase 4m, audited 2026-07-26) — strict CSP + X-Frame-Options: DENY in `public/_headers` |
 | L-1 Share route validation | Low | **RESOLVED** (2026-07-27) — `RESULT_ID_REGEX` validation + 12 unit tests |
@@ -105,7 +105,7 @@ Minor note: slices 4d-1 through 4d-5 used STATUS.md Key Decisions Log entries ra
 | L-3 JSON-LD price type | Low | **RESOLVED** (Phase 4m, confirmed 2026-07-27) — `price: 0` (number) |
 | L-4 Corrupted-state cleanup | Low | **RESOLVED** (Phase 4m, confirmed 2026-07-27) — `saveState`/`resetState` clear `:corrupted` |
 
-**No P0, P1, or Low items remain open.** One Medium item (M-1) remains, requiring new pages — deferred per the "no new features during acceptance" constraint.
+**No P0, P1, Low, or Medium items remain open.** All security findings (H-1, M-1, M-2, M-3, L-1 through L-4) are now resolved — the security review is fully green as of 2026-07-30.
 
 ---
 
@@ -138,14 +138,13 @@ All Phase 4d work is committed in two commits:
 
 ## 6. Remaining Pre-Launch Work
 
-1. **M-1:** Add `/privacy` and `/contact` pages (new feature — post-acceptance, requires owner approval per "no new features during acceptance" preference)
-2. **Content expansion:** 50+ puzzles per mode (currently 8 total — 2 per mode × 4 modes, no daily-only puzzles)
-3. **Future:** When a fixed `next` version is released (beyond the 16.3.0-preview.7 advisory range), upgrade and promote the CI Tier 2 advisory audit to blocking
+1. **Content expansion:** 50+ puzzles per mode (currently 8 total — 2 per mode × 4 modes, no daily-only puzzles)
+2. **Future:** When a fixed `next` version is released (beyond the 16.3.0-preview.7 advisory range), upgrade and promote the CI Tier 2 advisory audit to blocking
 
 ---
 
 ## 7. Verdict
 
-**PASS** — all 13 guardrails verified compliant, all 6 validation gates green (including critical-severity audit), all P0/P1/Low findings resolved, no fabricated data or APIs. Phase 4d is ready to close **upon owner approval** (guardrail #13).
+**PASS** — all 13 guardrails verified compliant, all 6 validation gates green (including critical-severity audit), all P0/P1/Low/Medium findings resolved, no fabricated data or APIs. Phase 4d is ready to close **upon owner approval** (guardrail #13).
 
-The only remaining open security item is M-1 (Privacy + Contact pages), which is a new-feature requirement deferred to post-acceptance. All other SECURITY-REVIEW.md findings (H-1, M-2, M-3, L-1, L-2, L-3, L-4) are resolved.
+All SECURITY-REVIEW.md findings (H-1, M-1, M-2, M-3, L-1, L-2, L-3, L-4) are now resolved — the security review is fully green as of 2026-07-30.
