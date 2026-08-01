@@ -1,0 +1,10 @@
+{
+  "id": "em-004",
+  "mode": "emoji",
+  "domain": "history",
+  "target": "Pyramid",
+  "aliases": ["pyramid", "pyramids", "egyptian pyramid"],
+  "emojis": ["🔺", "🐪", "🏜️"],
+  "hints": { "category": "History", "firstLetter": "P" },
+  "fact": "The Egyptian pyramids are monumental stone structures built as tombs for pharaohs, with triangular faces meeting at a point."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "tl-011",
+  "mode": "timeline",
+  "domain": "science",
+  "items": [
+    { "title": "First vaccine", "description": "Jenner develops the smallpox vaccine using cowpox", "date": 1796 },
+    { "title": "X-rays discovered", "description": "Röntgen discovers a new form of electromagnetic radiation", "date": 1895 },
+    { "title": "Penicillin discovered", "description": "Fleming finds the first true antibiotic", "date": 1928 },
+    { "title": "mRNA vaccine deployed", "description": "First widely used mRNA vaccines combat COVID-19", "date": 2020 }
+  ],
+  "fact": "These breakthroughs span two centuries of medicine, from the first vaccine and medical imaging to the genetic revolution of mRNA technology."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "em-003",
+  "mode": "emoji",
+  "domain": "nature",
+  "target": "Rainbow",
+  "aliases": ["rainbow", "rainbows"],
+  "emojis": ["🌈", "☔", "☀️"],
+  "hints": { "category": "Nature", "firstLetter": "R" },
+  "fact": "A rainbow forms when sunlight passes through rain droplets, bending and splitting into its component colors in an arc across the sky."
+}

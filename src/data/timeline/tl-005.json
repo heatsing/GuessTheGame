@@ -1,0 +1,12 @@
+{
+  "id": "tl-005",
+  "mode": "timeline",
+  "domain": "science",
+  "items": [
+    { "title": "ENIAC completed", "description": "First general-purpose electronic computer built at Penn", "date": 1945 },
+    { "title": "ARPANET launched", "description": "First packet-switched network, precursor to the Internet", "date": 1969 },
+    { "title": "World Wide Web invented", "description": "Tim Berners-Lee proposes the Web at CERN", "date": 1989 },
+    { "title": "iPhone released", "description": "Apple launches the modern smartphone era", "date": 2007 }
+  ],
+  "fact": "These four milestones span 60 years of computing, from room-sized machines to pocket-sized devices connecting billions of people."
+}

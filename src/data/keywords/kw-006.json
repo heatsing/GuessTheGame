@@ -1,0 +1,9 @@
+{
+  "id": "kw-006",
+  "mode": "keywords",
+  "domain": "everyday",
+  "target": "Clock",
+  "aliases": ["clock", "timepiece"],
+  "keywords": ["face", "hands", "tick", "time", "numbers", "gears"],
+  "fact": "A clock is an instrument used to measure, keep, and indicate time, traditionally using moving hands on a numbered face driven by gears."
+}

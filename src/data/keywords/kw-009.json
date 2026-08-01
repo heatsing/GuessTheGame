@@ -1,0 +1,9 @@
+{
+  "id": "kw-009",
+  "mode": "keywords",
+  "domain": "geography",
+  "target": "Lighthouse",
+  "aliases": ["lighthouse", "lighthouses"],
+  "keywords": ["tower", "light", "coast", "ships", "warning", "beam"],
+  "fact": "A lighthouse is a tower equipped with a powerful light that guides ships and warns them of dangerous coastlines and reefs."
+}

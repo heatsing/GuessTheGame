@@ -1,0 +1,9 @@
+{
+  "id": "kw-007",
+  "mode": "keywords",
+  "domain": "geography",
+  "target": "Glacier",
+  "aliases": ["glacier", "glaciers"],
+  "keywords": ["ice", "slow", "mountain", "river", "cold", "valley"],
+  "fact": "A glacier is a persistent body of dense ice that moves slowly under its own weight, carving valleys as it flows from mountainous regions."
+}

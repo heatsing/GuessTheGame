@@ -1,0 +1,9 @@
+{
+  "id": "kw-005",
+  "mode": "keywords",
+  "domain": "nature",
+  "target": "Rainbow",
+  "aliases": ["rainbow", "rainbows"],
+  "keywords": ["sky", "colors", "arc", "rain", "light", "prism"],
+  "fact": "A rainbow is an optical phenomenon caused by refraction and reflection of light in water droplets, producing a spectrum of colors in an arc across the sky."
+}

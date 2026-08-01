@@ -1,0 +1,12 @@
+{
+  "id": "tl-006",
+  "mode": "timeline",
+  "domain": "history",
+  "items": [
+    { "title": "Marco Polo's journey to Asia", "description": "Venetian merchant travels the Silk Road to China", "date": 1271 },
+    { "title": "Columbus reaches the Americas", "description": "First transatlantic voyage under Spanish flag", "date": 1492 },
+    { "title": "Magellan's circumnavigation begins", "description": "First expedition to sail around the globe", "date": 1519 },
+    { "title": "Cook's first Pacific voyage", "description": "British explorer maps the Pacific and reaches Australia", "date": 1768 }
+  ],
+  "fact": "These voyages span 500 years of exploration, from medieval overland trade routes to scientific expeditions across the Pacific Ocean."
+}

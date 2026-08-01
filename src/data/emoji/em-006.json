@@ -1,0 +1,10 @@
+{
+  "id": "em-006",
+  "mode": "emoji",
+  "domain": "science",
+  "target": "Moon",
+  "aliases": ["moon", "the moon"],
+  "emojis": ["🌕", "🌗", "🌑"],
+  "hints": { "category": "Science", "firstLetter": "M" },
+  "fact": "The Moon is Earth's only natural satellite, cycling through phases from full to new as it orbits our planet every 29.5 days."
+}

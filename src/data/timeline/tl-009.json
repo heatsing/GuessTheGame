@@ -1,0 +1,12 @@
+{
+  "id": "tl-009",
+  "mode": "timeline",
+  "domain": "everyday",
+  "items": [
+    { "title": "Paper invented in China", "description": "Cai Lun refines papermaking using bark, hemp, and rags during the Han dynasty", "date": 105 },
+    { "title": "Telegraph developed", "description": "Morse enables long-distance instant messaging", "date": 1837 },
+    { "title": "Telephone patented", "description": "Bell transmits the human voice over wire", "date": 1876 },
+    { "title": "Email invented", "description": "Ray Tomlinson sends the first network email, introducing the @ symbol", "date": 1971 }
+  ],
+  "fact": "These inventions transformed how humans share information, from paper and print to a global network connecting billions of devices."
+}

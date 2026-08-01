@@ -1,0 +1,12 @@
+{
+  "id": "tl-003",
+  "mode": "timeline",
+  "domain": "science",
+  "items": [
+    { "title": "Sputnik 1 launched", "description": "First artificial satellite placed in orbit by the Soviet Union", "date": 1957 },
+    { "title": "Voyager 1 launched", "description": "NASA probe begins its journey to the outer planets and beyond the solar system", "date": 1977 },
+    { "title": "Space Shuttle first flight", "description": "Columbia inaugurates reusable orbital flight", "date": 1981 },
+    { "title": "ISS construction begins", "description": "International Space Station assembly starts in orbit", "date": 1998 }
+  ],
+  "fact": "These four milestones trace the first 40 years of human spaceflight, from the first satellite to a probe leaving the solar system and a continuously inhabited orbital outpost."
+}

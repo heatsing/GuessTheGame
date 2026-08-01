@@ -1,0 +1,12 @@
+{
+  "id": "tl-007",
+  "mode": "timeline",
+  "domain": "nature",
+  "items": [
+    { "title": "Vesuvius buries Pompeii", "description": "Roman city destroyed by volcanic eruption", "date": 79 },
+    { "title": "Lisbon earthquake", "description": "Massive quake and tsunami devastate Portugal's capital", "date": 1755 },
+    { "title": "Krakatoa erupts", "description": "Indonesian volcano produces the loudest sound ever recorded", "date": 1883 },
+    { "title": "San Francisco earthquake", "description": "Major quake and fires destroy much of the city", "date": 1906 }
+  ],
+  "fact": "These four catastrophic events shaped how humanity understands and prepares for natural disasters across nearly two millennia."
+}

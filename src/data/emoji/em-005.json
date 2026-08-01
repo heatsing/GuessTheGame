@@ -1,0 +1,10 @@
+{
+  "id": "em-005",
+  "mode": "emoji",
+  "domain": "everyday",
+  "target": "Clock",
+  "aliases": ["clock", "timepiece"],
+  "emojis": ["🕐", "⏰", "⏳"],
+  "hints": { "category": "Everyday", "firstLetter": "C" },
+  "fact": "A clock measures and displays time, using moving hands on a numbered face or a digital readout to show hours, minutes, and seconds."
+}

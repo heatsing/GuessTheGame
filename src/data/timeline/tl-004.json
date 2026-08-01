@@ -1,0 +1,12 @@
+{
+  "id": "tl-004",
+  "mode": "timeline",
+  "domain": "history",
+  "items": [
+    { "title": "Ancient Egypt unified", "description": "Narmer unites Upper and Lower Egypt into a single kingdom", "date": -3100 },
+    { "title": "Greek Archaic period", "description": "Rise of the Greek city-states and early cultural flowering", "date": -800 },
+    { "title": "Founding of Rome", "description": "Traditional date of the establishment of the city of Rome", "date": -753 },
+    { "title": "Maya Classic period", "description": "Peak of Maya civilization in Mesoamerica", "date": 250 }
+  ],
+  "fact": "These civilizations rose thousands of years apart, from the unification of Egypt to the height of the Maya, spanning over three millennia."
+}

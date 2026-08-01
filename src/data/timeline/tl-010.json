@@ -1,0 +1,12 @@
+{
+  "id": "tl-010",
+  "mode": "timeline",
+  "domain": "history",
+  "items": [
+    { "title": "Great Pyramid of Giza built", "description": "Tallest structure in the world for nearly 4,000 years", "date": -2560 },
+    { "title": "Great Wall consolidated", "description": "Qin dynasty links existing walls into one barrier", "date": -220 },
+    { "title": "Eiffel Tower completed", "description": "Wrought-iron lattice tower built for the Paris Exposition", "date": 1889 },
+    { "title": "Burj Khalifa opened", "description": "World's tallest building at 828 meters in Dubai", "date": 2010 }
+  ],
+  "fact": "These four structures held the title of world's tallest at different points, spanning from ancient Egypt to modern Dubai."
+}

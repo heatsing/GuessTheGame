@@ -1,0 +1,9 @@
+{
+  "id": "kw-012",
+  "mode": "keywords",
+  "domain": "everyday",
+  "target": "Dam",
+  "aliases": ["dam", "dams"],
+  "keywords": ["wall", "water", "river", "hold", "reservoir", "hydro"],
+  "fact": "A dam is a barrier constructed across a river to hold back water, forming a reservoir used for water supply, irrigation, or hydroelectric power."
+}

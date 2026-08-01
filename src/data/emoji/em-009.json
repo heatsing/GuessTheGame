@@ -1,0 +1,10 @@
+{
+  "id": "em-009",
+  "mode": "emoji",
+  "domain": "science",
+  "target": "Telescope",
+  "aliases": ["telescope", "telescopes"],
+  "emojis": ["🔭", "⭐", "🌌"],
+  "hints": { "category": "Science", "firstLetter": "T" },
+  "fact": "A telescope is an optical instrument that gathers light from distant objects, making stars and galaxies visible to the human eye."
+}

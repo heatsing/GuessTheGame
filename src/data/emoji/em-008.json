@@ -1,0 +1,10 @@
+{
+  "id": "em-008",
+  "mode": "emoji",
+  "domain": "science",
+  "target": "Earthquake",
+  "aliases": ["earthquake", "earthquakes", "seism"],
+  "emojis": ["🌍", "💥", "📉"],
+  "hints": { "category": "Science", "firstLetter": "E" },
+  "fact": "An earthquake is a sudden shaking of the ground caused by the movement of tectonic plates beneath Earth's surface, measured on a seismic scale."
+}

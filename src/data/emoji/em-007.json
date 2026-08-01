@@ -1,0 +1,10 @@
+{
+  "id": "em-007",
+  "mode": "emoji",
+  "domain": "nature",
+  "target": "Spider",
+  "aliases": ["spider", "spiders"],
+  "emojis": ["🕷️", "🕸️", "8️⃣"],
+  "hints": { "category": "Nature", "firstLetter": "S" },
+  "fact": "A spider is an eight-legged arachnid that spins silk webs to catch prey, found in nearly every habitat on Earth."
+}

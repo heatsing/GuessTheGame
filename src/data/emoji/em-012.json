@@ -1,0 +1,10 @@
+{
+  "id": "em-012",
+  "mode": "emoji",
+  "domain": "geography",
+  "target": "Island",
+  "aliases": ["island", "islands", "isle"],
+  "emojis": ["🏝️", "🌊", "🌴"],
+  "hints": { "category": "Geography", "firstLetter": "I" },
+  "fact": "An island is a piece of land surrounded by water, ranging from small sandy islets to large continental landmasses like Greenland."
+}

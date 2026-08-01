@@ -1,0 +1,9 @@
+{
+  "id": "kw-011",
+  "mode": "keywords",
+  "domain": "science",
+  "target": "Telescope",
+  "aliases": ["telescope", "telescopes"],
+  "keywords": ["tube", "lens", "stars", "far", "focus", "sky"],
+  "fact": "A telescope is an optical instrument using lenses or mirrors to collect and focus light, making distant objects such as stars appear closer and clearer."
+}

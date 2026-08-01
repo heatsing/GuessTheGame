@@ -1,0 +1,10 @@
+{
+  "id": "em-010",
+  "mode": "emoji",
+  "domain": "nature",
+  "target": "Lightning",
+  "aliases": ["lightning", "lightning bolt", "thunderbolt"],
+  "emojis": ["⚡", "🌧️", "🌩️"],
+  "hints": { "category": "Nature", "firstLetter": "L" },
+  "fact": "Lightning is a powerful electrostatic discharge that occurs during thunderstorms, producing a bright flash and the sound of thunder."
+}

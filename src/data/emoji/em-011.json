@@ -1,0 +1,10 @@
+{
+  "id": "em-011",
+  "mode": "emoji",
+  "domain": "nature",
+  "target": "Penguin",
+  "aliases": ["penguin", "penguins"],
+  "emojis": ["🐧", "❄️", "🧊"],
+  "hints": { "category": "Nature", "firstLetter": "P" },
+  "fact": "A penguin is a flightless aquatic bird that lives primarily in the Southern Hemisphere, especially Antarctica, and swims using its flipper-like wings."
+}

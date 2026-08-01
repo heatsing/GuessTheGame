@@ -1,0 +1,12 @@
+{
+  "id": "tl-012",
+  "mode": "timeline",
+  "domain": "science",
+  "items": [
+    { "title": "First oil well drilled", "description": "Drake strikes oil in Pennsylvania, launching the modern petroleum industry", "date": 1859 },
+    { "title": "Incandescent light bulb", "description": "Edison's practical electric light transforms daily life", "date": 1879 },
+    { "title": "First nuclear electricity", "description": "EBR-1 reactor lights four bulbs in Idaho", "date": 1951 },
+    { "title": "Practical solar cell", "description": "Bell Labs produces the first silicon photovoltaic cell", "date": 1954 }
+  ],
+  "fact": "These four milestones trace the evolution of human energy, from petroleum and electric light to the atomic age and the rise of solar technology."
+}

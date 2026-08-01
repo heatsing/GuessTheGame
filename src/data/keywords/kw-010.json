@@ -1,0 +1,9 @@
+{
+  "id": "kw-010",
+  "mode": "keywords",
+  "domain": "science",
+  "target": "Magnet",
+  "aliases": ["magnet", "magnets", "magnetic"],
+  "keywords": ["pull", "metal", "poles", "north", "iron", "field"],
+  "fact": "A magnet is an object that produces a magnetic field, attracting ferromagnetic materials like iron and exerting forces with north and south poles."
+}

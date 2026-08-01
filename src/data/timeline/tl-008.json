@@ -1,0 +1,12 @@
+{
+  "id": "tl-008",
+  "mode": "timeline",
+  "domain": "everyday",
+  "items": [
+    { "title": "Wheel invented", "description": "Earliest evidence of the wheel in Mesopotamia", "date": -3500 },
+    { "title": "First steam locomotive", "description": "Trevithick's engine runs on rails in Wales", "date": 1804 },
+    { "title": "First automobile", "description": "Benz patents the gasoline-powered Motorwagen", "date": 1886 },
+    { "title": "First transatlantic flight", "description": "Alcock and Brown fly non-stop from Newfoundland to Ireland", "date": 1919 }
+  ],
+  "fact": "These milestones in transportation span over five millennia, from the invention of the wheel to the first non-stop flight across the Atlantic Ocean."
+}
