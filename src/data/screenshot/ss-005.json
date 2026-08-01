@@ -1,0 +1,12 @@
+{
+  "id": "ss-005",
+  "mode": "screenshot",
+  "domain": "geography",
+  "target": "Amazon River",
+  "aliases": ["amazon river", "rio amazonas"],
+  "image": "/images/puzzles/ss-005.webp",
+  "blurSrc": "/images/puzzles/ss-005-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA — Amazon River from Space Shuttle (STS078-751-094). Source: Wikimedia Commons (Amazon-river-NASA.jpg).",
+  "fact": "The Amazon River is the largest river by discharge volume in the world, flowing across South America for about 6,400 km and draining a basin covering nearly 7 million square kilometers."
+}

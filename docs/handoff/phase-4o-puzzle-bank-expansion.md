@@ -1,20 +1,20 @@
-# Handoff: Phase 4o — Puzzle bank expansion (text-based modes)
+# Handoff: Phase 4o — Puzzle bank expansion
 
-> Date: 2026-07-30 · From: Content Architect · To: Reviewer / Owner
+> Date: 2026-07-30 (updated 2026-08-01) · From: Content Architect · To: Reviewer / Owner
 
 ## Scope
 
-Expand the puzzle bank for the three text-based modes (Keywords, Emoji, Timeline) from 2 puzzles each to 12 each. This is the first step toward the "50+ puzzles per mode" target tracked in `docs/STATUS.md` → Next Actions.
+Expand the puzzle bank for all four modes from 2 puzzles each to 12 each. This is the first step toward the "50+ puzzles per mode" target tracked in `docs/STATUS.md` → Next Actions.
 
 | Mode | Before | After | Δ |
 |------|--------|-------|---|
 | Keywords | 2 (kw-001, kw-002) | 12 (kw-001..kw-012) | +10 |
 | Emoji | 2 (em-001, em-002) | 12 (em-001..em-012) | +10 |
 | Timeline | 2 (tl-001, tl-002) | 12 (tl-001..tl-012) | +10 |
-| Screenshot | 2 (ss-001, ss-002) | 2 (unchanged) | 0 |
-| **Total** | **8** | **38** | **+30** |
+| Screenshot | 2 (ss-001, ss-002) | 12 (ss-001..ss-012) | +10 |
+| **Total** | **8** | **48** | **+40** |
 
-Screenshot mode is unchanged — it requires sourcing additional public-domain image assets (with verified per-file attribution), which is a separate task.
+Screenshot mode was expanded in two follow-up steps (2026-08-01): first 2→6 with 4 puzzles, then 6→12 with 6 more puzzles, all using verified public-domain NASA images from Wikimedia Commons.
 
 ## What was done
 
@@ -82,15 +82,63 @@ The initial batch had 6 historical events reused across multiple timeline puzzle
 
 After the fix, all 48 timeline events (12 puzzles × 4 items) have unique titles — no event appears in more than one puzzle. Each puzzle's `items` array remains in ascending chronological order. `fact` strings updated to match the new content. Original tl-001 and tl-002 were left unchanged.
 
+### 3. Screenshot mode expansion (2026-08-01)
+
+Added 4 new screenshot puzzles (ss-003..ss-006) with verified public-domain NASA images sourced from Wikimedia Commons:
+
+| ID | Target | Domain | Source | Main size | Blur size |
+|----|--------|--------|--------|-----------|-----------|
+| ss-003 | Hurricane | nature | Hurricane Isabel eye from ISS (NASA astronaut Ed Lu) | 16.9 KB | 0.07 KB |
+| ss-004 | Aurora Borealis | nature | ISS-42 Aurora borealis over North Atlantic (NASA/Samantha Cristoforetti) | 10.1 KB | 0.09 KB |
+| ss-005 | Amazon River | geography | Space Shuttle STS078-751-094 (NASA) | 72.4 KB | 0.09 KB |
+| ss-006 | New York City | geography | ISS-53 Night Lights (NASA) | 74.4 KB | 0.07 KB |
+
+**License verification:** each image's `LicenseShortName` was checked via the Wikimedia Commons API `extmetadata` endpoint — all return `Public domain`. Attribution recorded per-file in the `imageAttribution` field.
+
+**Image processing:** Python/Pillow (already available, no new npm dep — guardrail #3). Each image: downloaded full-resolution JPEG → center-cropped to 16:9 → resized to 960×540 → saved as WebP with quality adjusted to stay ≤80KB (DECISIONS.md cap). Blur LQIP: 20×15px, Gaussian blur, WebP quality 5, output 0.07–0.09 KB each (≤5KB cap).
+
+### 4. Screenshot mode expansion (2026-08-01, cont.) — 6→12
+
+Added 6 more screenshot puzzles (ss-007..ss-012) with verified public-domain NASA images, bringing Screenshot to 12 puzzles — matching the other three modes. This batch deliberately expands domain coverage beyond the geography/nature cluster of ss-001..ss-006 to include history, science, and everyday:
+
+| ID | Target | Domain | Source | Main size | Blur size |
+|----|--------|--------|--------|-----------|-----------|
+| ss-007 | Grand Canyon | geography | Grand Canyon from space (NASA) | 57.7 KB | 0.06 KB |
+| ss-008 | Great Pyramid of Giza | history | ISS-32 Pyramids at Giza, Egypt (NASA) | 78.3 KB | 0.07 KB |
+| ss-009 | Palm Jumeirah | everyday | ISS-47 Palm Jumeirah, Dubai (NASA/Tim Kopra) | 78.3 KB | 0.08 KB |
+| ss-010 | Solar Eclipse | science | 2024 Total Solar Eclipse (NASA GRC/Jordan Salkin) | 4.4 KB | 0.06 KB |
+| ss-011 | Wildfire | nature | 2018-08-04 Wildfire Smoke Across Western US (NASA WorldView) | 78.7 KB | 0.07 KB |
+| ss-012 | Colosseum | history | ISS048-E-12677 Colosseum, Rome (NASA JSC ESRS, cropped) | 77.6 KB | 0.06 KB |
+
+**Domain distribution (all 12 Screenshot puzzles):** geography 5 (Everest, Sahara, Amazon, NYC, Grand Canyon), nature 3 (Hurricane, Aurora, Wildfire), history 2 (Great Pyramid, Colosseum), science 1 (Solar Eclipse), everyday 1 (Palm Jumeirah). All 5 `DomainEnum` values are now represented.
+
+**License verification:** each image's `LicenseShortName` was checked via the Wikimedia Commons API `extmetadata` endpoint — all return `Public domain`. Attribution recorded per-file in the `imageAttribution` field.
+
+**Image processing:** same Python/Pillow pipeline as section 3 (no new npm dep — guardrail #3). Each image: downloaded a 1280px thumbnail via the Wikimedia API → center-cropped to 16:9 → resized to 960×540 → saved as WebP with quality adjusted to stay ≤80KB. Blur LQIP: 20×15px, Gaussian blur, WebP quality 5, output 0.06–0.08 KB each (≤5KB cap).
+
+**Note on ss-008 and ss-012 compression:** these two images (Pyramids and Colosseum) have high-frequency urban/desert detail that kept them above 80 KB at the normal quality floor of 30. They were re-compressed from the saved WebP at quality 22 (ss-008) and 20 (ss-012) to meet the cap. This is a second lossy encode, so there is minor quality loss — acceptable for a guessing-game screenshot where the image starts blurred and sharpens progressively.
+
 ## Files changed
 
-**New (30 files):**
+**New (46 files):**
 - `src/data/keywords/kw-003.json` through `src/data/keywords/kw-012.json`
 - `src/data/emoji/em-003.json` through `src/data/emoji/em-012.json`
 - `src/data/timeline/tl-003.json` through `src/data/timeline/tl-012.json`
+- `src/data/screenshot/ss-003.json` through `src/data/screenshot/ss-006.json`
+- `src/data/screenshot/ss-007.json` through `src/data/screenshot/ss-012.json`
+- `public/images/puzzles/ss-003.webp`, `ss-003-blur.webp`
+- `public/images/puzzles/ss-004.webp`, `ss-004-blur.webp`
+- `public/images/puzzles/ss-005.webp`, `ss-005-blur.webp`
+- `public/images/puzzles/ss-006.webp`, `ss-006-blur.webp`
+- `public/images/puzzles/ss-007.webp`, `ss-007-blur.webp`
+- `public/images/puzzles/ss-008.webp`, `ss-008-blur.webp`
+- `public/images/puzzles/ss-009.webp`, `ss-009-blur.webp`
+- `public/images/puzzles/ss-010.webp`, `ss-010-blur.webp`
+- `public/images/puzzles/ss-011.webp`, `ss-011-blur.webp`
+- `public/images/puzzles/ss-012.webp`, `ss-012-blur.webp`
 
 **Modified (2 files):**
-- `docs/STATUS.md` — added Phase 4o entry to the Key Decisions Log; updated Next Actions to reflect partial completion of the content expansion target.
+- `docs/STATUS.md` — added Phase 4o entries to the Key Decisions Log; updated Next Actions to reflect partial completion of the content expansion target.
 - `docs/handoff/phase-4o-puzzle-bank-expansion.md` — this handoff document.
 
 ## Verification
@@ -99,7 +147,7 @@ All validation gates green:
 
 | Gate | Result |
 |------|--------|
-| `npm run content:check` | 38/38 schema passed, 0 asset problems, 0 duplicate problems |
+| `npm run content:check` | 48/48 schema passed, 12 referenced assets (0 missing, 0 oversized), 0 duplicate problems |
 | `npm run typecheck` | clean (tsc --noEmit, exit 0) |
 | `npm run lint` | clean (0 ESLint warnings/errors) |
 | `npm test` | 413/413 tests pass (30 test files) |
@@ -125,7 +173,7 @@ All validation gates green:
 
 ## Next actions for the owner
 
-1. Review the 30 new puzzles for content quality, factual accuracy, and difficulty calibration.
+1. Review the 40 new puzzles for content quality, factual accuracy, and difficulty calibration.
 2. Decide whether the cross-mode target overlap (§1) is acceptable for launch, or request a follow-up content pass to deduplicate Keywords ↔ Emoji targets.
-3. Decide whether to proceed with Screenshot mode expansion (requires sourcing additional public-domain image assets with verified attribution — the same workflow used for P0-1 on 2026-07-26).
-4. Decide whether to continue toward the 50+ per-mode target, or accept the current 12/12/12/2 distribution as sufficient for launch.
+3. Decide whether to continue toward the 50+ per-mode target (current: 12/12/12/12 = 48 total), or accept the current 12-per-mode distribution as sufficient for launch.
+4. Fix the Deploy workflow (Cloudflare `apiToken` secret not configured — unrelated to current work).

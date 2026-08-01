@@ -1,0 +1,12 @@
+{
+  "id": "ss-012",
+  "mode": "screenshot",
+  "domain": "history",
+  "target": "Colosseum",
+  "aliases": ["colosseum", "coliseum", "roman colosseum", "flavian amphitheatre", "amphitheatrum flavium"],
+  "image": "/images/puzzles/ss-012.webp",
+  "blurSrc": "/images/puzzles/ss-012-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA Earth Science and Remote Sensing Unit, Johnson Space Center — ISS048-E-12677 Colosseum, Rome (cropped). Source: Wikimedia Commons.",
+  "fact": "The Colosseum in Rome is the largest amphitheater ever built, completed in 80 CE under Emperor Titus, and could hold up to 80,000 spectators for gladiatorial contests and public spectacles."
+}

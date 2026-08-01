@@ -1,0 +1,12 @@
+{
+  "id": "ss-010",
+  "mode": "screenshot",
+  "domain": "science",
+  "target": "Solar Eclipse",
+  "aliases": ["solar eclipse", "total solar eclipse", "total eclipse", "eclipse"],
+  "image": "/images/puzzles/ss-010.webp",
+  "blurSrc": "/images/puzzles/ss-010-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA Glenn Research Center / Jordan Salkin — 2024 Total Solar Eclipse. Source: Wikimedia Commons (2024_Total_Solar_Eclipse_(GRC-2024-C-02612).jpg).",
+  "fact": "A total solar eclipse occurs when the Moon passes completely between Earth and the Sun, briefly blocking the Sun's bright disk and revealing the faint, glowing corona of the solar atmosphere."
+}

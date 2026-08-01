@@ -1,0 +1,12 @@
+{
+  "id": "ss-003",
+  "mode": "screenshot",
+  "domain": "nature",
+  "target": "Hurricane",
+  "aliases": ["hurricane", "hurricane isabel", "typhoon", "cyclone"],
+  "image": "/images/puzzles/ss-003.webp",
+  "blurSrc": "/images/puzzles/ss-003-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA astronaut Ed Lu — Hurricane Isabel eye from ISS. Source: Wikimedia Commons (Hurricane_Isabel_eye_from_ISS_(edit_1).jpg).",
+  "fact": "A hurricane is a massive rotating storm system that forms over warm tropical waters, with sustained winds exceeding 119 km/h (74 mph) and a calm central eye."
+}

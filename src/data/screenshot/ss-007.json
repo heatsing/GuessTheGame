@@ -1,0 +1,12 @@
+{
+  "id": "ss-007",
+  "mode": "screenshot",
+  "domain": "geography",
+  "target": "Grand Canyon",
+  "aliases": ["grand canyon", "grand canyon national park", "colorado river canyon"],
+  "image": "/images/puzzles/ss-007.webp",
+  "blurSrc": "/images/puzzles/ss-007-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA — Grand Canyon from space. Source: Wikimedia Commons (Grand_Canyon_from_space.JPG).",
+  "fact": "The Grand Canyon is a steep-sided canyon carved by the Colorado River in Arizona, USA, stretching 446 km long and up to 1,857 meters deep, exposing rock layers up to 2 billion years old."
+}

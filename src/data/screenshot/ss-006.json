@@ -1,0 +1,12 @@
+{
+  "id": "ss-006",
+  "mode": "screenshot",
+  "domain": "geography",
+  "target": "New York City",
+  "aliases": ["new york city", "new york", "nyc", "manhattan"],
+  "image": "/images/puzzles/ss-006.webp",
+  "blurSrc": "/images/puzzles/ss-006-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA — ISS-53 New York City Night Lights. Source: Wikimedia Commons (ISS-53_New_York_City,_Night_Lights.jpg).",
+  "fact": "New York City is the most populous city in the United States, and its vast network of street and building lights makes the metropolitan area clearly visible from the International Space Station at night."
+}

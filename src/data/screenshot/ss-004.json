@@ -1,0 +1,12 @@
+{
+  "id": "ss-004",
+  "mode": "screenshot",
+  "domain": "nature",
+  "target": "Aurora Borealis",
+  "aliases": ["aurora borealis", "northern lights", "aurora"],
+  "image": "/images/puzzles/ss-004.webp",
+  "blurSrc": "/images/puzzles/ss-004-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA/Samantha Cristoforetti — ISS-42 Aurora borealis over North Atlantic Ocean. Source: Wikimedia Commons.",
+  "fact": "The aurora borealis, or northern lights, is a natural light display caused by charged particles from the Sun colliding with gases in Earth's upper atmosphere near the poles."
+}

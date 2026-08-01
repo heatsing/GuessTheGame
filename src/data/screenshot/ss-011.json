@@ -1,0 +1,12 @@
+{
+  "id": "ss-011",
+  "mode": "screenshot",
+  "domain": "nature",
+  "target": "Wildfire",
+  "aliases": ["wildfire", "wild fire", "forest fire", "bushfire", "brushfire"],
+  "image": "/images/puzzles/ss-011.webp",
+  "blurSrc": "/images/puzzles/ss-011-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "Generated in WorldView using NASA data — 2018-08-04 Wildfire Smoke Across Western US. Source: Wikimedia Commons.",
+  "fact": "A wildfire is an uncontrolled fire in combustible vegetation in rural or wilderness areas, and its smoke plumes can stretch hundreds of kilometers, visible from satellites and the International Space Station."
+}

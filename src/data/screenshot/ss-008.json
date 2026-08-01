@@ -1,0 +1,12 @@
+{
+  "id": "ss-008",
+  "mode": "screenshot",
+  "domain": "history",
+  "target": "Great Pyramid of Giza",
+  "aliases": ["great pyramid of giza", "great pyramid", "pyramid of giza", "pyramids of giza", "khufu pyramid"],
+  "image": "/images/puzzles/ss-008.webp",
+  "blurSrc": "/images/puzzles/ss-008-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA — ISS-32 Pyramids at Giza, Egypt. Source: Wikimedia Commons (ISS-32_Pyramids_at_Giza,_Egypt.jpg).",
+  "fact": "The Great Pyramid of Giza is the largest of the three pyramids at Giza and the oldest of the Seven Wonders of the Ancient World, built around 2560 BCE as a tomb for Pharaoh Khufu."
+}

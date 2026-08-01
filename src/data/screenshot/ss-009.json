@@ -1,0 +1,12 @@
+{
+  "id": "ss-009",
+  "mode": "screenshot",
+  "domain": "everyday",
+  "target": "Palm Jumeirah",
+  "aliases": ["palm jumeirah", "palm island", "palm island dubai", "dubai palm island"],
+  "image": "/images/puzzles/ss-009.webp",
+  "blurSrc": "/images/puzzles/ss-009-blur.webp",
+  "imageLicense": "public-domain",
+  "imageAttribution": "NASA/Tim Kopra — ISS-47 Palm Jumeirah, Dubai. Source: Wikimedia Commons (ISS-47_Palm_Jumeirah,_Dubai.jpg).",
+  "fact": "Palm Jumeirah is an artificial archipelago in Dubai, United Arab Emirates, shaped like a palm tree and built using land reclamation — one of the most distinctive man-made islands visible from space."
+}
